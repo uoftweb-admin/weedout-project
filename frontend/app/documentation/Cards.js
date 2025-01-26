@@ -1,26 +1,34 @@
 import React from "react";
 import { GREEN, BLUE, WHITE } from "./colors";
+import Link from "next/link";
 
-export default function Cards({ children, link }) {
+export default function Cards({ link, title, description, children }) {
     return (
         <div
           style={{
             // You can swap to display: "flex" or "grid" as you prefer:
-            display: "flex",
             background: WHITE,
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "2rem",
-            marginTop: "3rem",
-            marginLeft: "10%",
-            marginRight: "10%",
             color: BLUE,
           }}
+          className=" rounded-xl shadow-lg hover:shadow-xl
+           transition-shadow duration-300 p-8 h-full flex flex-col"
         >
-            <a
-                href={`document/${link}`}
+            {/* title and descriptions */}
+            <div className="flex-1 text-center">
+                <h3 className="text-2xl font-bold mb-4">{title}</h3>
+                <p className="mb-6 whitespace-pre-line">{description}</p>
+            </div>
+
+            {/* the link button */}
+            {/* <button> */}
+            <Link
+                href={`documentation/${link}`}
+                style={{background: BLUE, color: WHITE}}
+                className={`mt-auto inline-block hover:scale-105 px-6 py-3 rounded-lg font-medium transition-colors duration-200 text-center`}
             >
-                {children}
-            </a>
+                For More →
+            </Link>
+            {/* </button> */}
         </div>
     );
 }
