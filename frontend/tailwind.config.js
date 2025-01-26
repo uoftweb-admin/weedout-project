@@ -11,7 +11,23 @@ module.exports = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      screens: {
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
+        '2xl': '1536px',
+      },
+      maxWidth: {
+        '7xl': '80rem',
+      }
     },
+  },
+  variants: {
+    extend: {
+      scale: ['hover'],
+      shadow: ['hover']
+    }
   },
   plugins: [],
 };
