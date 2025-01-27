@@ -1,4 +1,10 @@
 import React from "react";
+import { Inria_Serif } from '@next/font/google';
+
+const inriaSerif = Inria_Serif({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
 
 export default function OurTeamPage() {
   const teamData = [
@@ -13,7 +19,7 @@ export default function OurTeamPage() {
   ];
 
   return (
-    <div className="bg-green-700 min-h-screen p-8">
+    <div className="bg-customGreen-700 min-h-screen p-8">
       <h1 className="text-white text-4xl font-bold text-center mt-10">2024 - 2025 WeedOut Team</h1>
       <p className="text-white text-lg text-center mt-2">UofT WebDev X UTM Software Club</p>
       <div className="mt-10 space-y-16">
