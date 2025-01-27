@@ -20,17 +20,17 @@ export default function OurTeamPage() {
 
   return (
     <div className="bg-customGreen min-h-screen p-8">
-      <h1 className="text-white text-4xl font-bold text-center mt-10">2024 - 2025 WeedOut Team</h1>
-      <p className="text-white text-lg text-center mt-2">UofT WebDev X UTM Software Club</p>
+      <h1 className="text-beige text-4xl font-bold text-center mt-10">2024 - 2025 WeedOut Team</h1>
+      <p className="text-beige text-lg text-center mt-2">UofT WebDev X UTM Software Club</p>
       <div className="mt-10 space-y-16">
         {teamData.map((team, index) => (
           <div key={index}>
-            <h2 className="text-white text-3xl font-semibold text-center">{team.teamName}</h2>
+            <h2 className="text-beige text-3xl font-semibold text-center">{team.teamName}</h2>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-8 mt-8 justify-items-center">
               {team.members.map((member, idx) => (
                 <div
                   key={idx}
-                  className="flex flex-col items-center text-white space-y-2"
+                  className="flex flex-col items-center text-beige space-y-2"
                 >
                   <div className="w-24 h-24 bg-gray-300 rounded-full"></div>
                   <h3 className="text-xl font-medium">{member.name}</h3>
@@ -38,22 +38,22 @@ export default function OurTeamPage() {
                   <div className="flex space-x-4 mt-2">
                     <a
                       href="#"
-                      className="bg-gray-100 p-2 rounded-full"
+                      className="bg-beige p-2 rounded-full"
                       aria-label="GitHub"
                     >
                       <img
-                        src="/github-icon.png"
+                        src="/our-team/icons/github-icon.png"
                         alt="GitHub"
                         className="w-5 h-5"
                       />
                     </a>
                     <a
                       href="#"
-                      className="bg-gray-100 p-2 rounded-full"
+                      className="bg-beige p-2 rounded-full"
                       aria-label="LinkedIn"
                     >
                       <img
-                        src="/linkedin-icon.png"
+                        src="our-team/icons/linkedin-icon.png"
                         alt="LinkedIn"
                         className="w-5 h-5"
                       />
@@ -64,7 +64,7 @@ export default function OurTeamPage() {
                       aria-label="Email"
                     >
                       <img
-                        src="/email-icon.png"
+                        src="/our-team/icons/email-icon.png"
                         alt="Email"
                         className="w-5 h-5"
                       />
