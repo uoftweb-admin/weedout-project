@@ -2,22 +2,25 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="bg-green-800 text-white min-h-screen text-center pt-20 pb-20">
+    <div
+      className="text-white min-h-screen text-center pt-20 pb-20"
+      style={{ background: "#007057" }}
+    >
       {/* Header Section */}
       <div className="flex flex-wrap justify-center items-center gap-8">
         {/* Left Content */}
         <div>
-          <h1 className="text-5xl font-italiana mb-2">WeedOut</h1>
+          <h1 className="italic  text-5xl font-italiana mb-2">WeedOut</h1>
           <p className="italic text-2xl font-italiana mb-8">
             one-stop data pre-processing tool
           </p>
           <div>
-            <button className="px-6 py-3 mr-4 bg-gray-300 rounded-md cursor-pointer">
+            <button className="px-6 text-black  py-3 mr-4 bg-gray-300 rounded-md cursor-pointer">
               Try it out
             </button>
             <button className="px-6 py-3 bg-gray-300 rounded-md cursor-pointer">
               <a
-                href="https://github.com/uoftweb-admin/weedout-project"
+                href="https://github.com/rohannair2022/weedout"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-black no-underline"
@@ -30,25 +33,33 @@ export default function Home() {
 
         {/* Right Content (Image) */}
         <div>
-          <Image src="/dog.png" alt="WeedOut Logo" width={150} height={150} />
+          <Image src="/dog.png" alt="WeedOut Logo" width={250} height={250} />
         </div>
       </div>
 
       {/* Footer Section */}
-      <div className="flex justify-center items-center mt-12">
-        <div className="flex items-center justify-center bg-green-600 px-4 py-2 rounded-md max-w-[90%] w-1/3">
+      <div
+        className="flex justify-center items-center mt-12"
+        style={{ background: "#669873" }}
+      >
+        <a
+          href="https://pypi.org/project/weedout/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center px-4 py-2 rounded-md max-w-[90%] w-1/3 hover:bg-opacity-80 transition-all duration-300"
+        >
           <Image
             src="/python-logo.webp"
             alt="Python Logo"
             width={30}
             height={30}
           />
-          <span className="ml-4 text-lg">pip install weedout</span>
-        </div>
+          <span className="ml-4 text-lg text-white">pip install weedout</span>
+        </a>
       </div>
 
       {/* Latest Changes Section */}
-      <div className="bg-green-800 text-white p-8 rounded-lg mt-8 max-w-[90%] mx-auto text-center">
+      <div className="text-white p-8 rounded-lg mt-8 max-w-[90%] mx-auto text-center">
         <h2 className="text-3xl mb-4">Latest Changes</h2>
         <table className="w-full border-collapse">
           <thead>
