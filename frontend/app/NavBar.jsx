@@ -3,70 +3,74 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation.js';
-import { GREEN, BLUE, WHITE } from "./documentation/colors.js";
+// import { GREEN, BLUE, WHITE } from "./documentation/colors.js";
+import { UIProvider, useUI } from "./UIProvider.js";
 
-export default function Navbar() {
+const defaultNavItems = [
+  { label: "Home", href: "/", key: "home-key" },
+  { label: "Documentation", href: "/documentation", key: "documentation-key" },
+  { label: "About Us", href: "/about-us", key: "about-us-key" },
+  { label: "Our Team", href: "/our-team", key: "our-team-key" },
+];
 
+// if no navItems are passed, use the defaultNavItems
+export default function Navbar({navItems = defaultNavItems}) {
+  const { sidebarOpen, setSidebarOpen } = useUI();
   const pathname = usePathname();
 
+  // Function to check if the current link is active.
+  const isActive = (href) => {
+    // For exact match or starts with match for nested routes
+    if (href === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(href);
+  };
+
   return (
-    <nav 
-      style={ {background: GREEN }}
-      className="w-full shadow-md sticky top-0 z-50"
-    >
-      <div 
-        style = {{color: WHITE}}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-      >
-        <div className="flex justify-between items-center h-20">
+    <nav className="sticky top-0 z-100 bg-customGreen shadow-md">
+      <div className="max-w-7xl mx-auto px-4 color-beige">
+        <div className="flex justify-between items-center h-16">
           {/* Left-aligned logo and title */}
           {/* WeedOut Title */}
           <div className="flex items-center space-x-2">
-            <img 
-              src="/favicon.ico" 
-              alt="Logo"
-              className="h-8 w-8"
-            />
-            <span className="text-2xl font-bold">WeedOut</span>
+            <button
+              className="p-2 hover:scale-110"
+              onClick={() => setSidebarOpen(!sidebarOpen)} // toggle sidebar
+            >
+              <img 
+                src="/favicon.ico" 
+                alt="Logo"
+                className="h-8 w-8"
+              />
+            </button>
+            {/* for small screen, we hind it */}
+            <span className="text-xl font-bold hidden sm:inline">WeedOut</span>
           </div>
 
-          {/* Centered navigation links */}
-          <div className="hidden md:flex flex-1 justify-center items-center space-x-8">
-            <Link 
-              href="/" 
-              className={`text-lg font-semibold transition-colors ${
-                pathname === "/" ? "text-blue-300" : " hover:text-blue-200"
-              }`}
+          {/* Navigation links */}
+          {/* nav bar：use flex-nowrap + overflow-x-auto control --> horizontal rolling */}
+          <div className='flex-1 flex overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200'>
+            {/* mobile and screen screen view, scrolling enabled */}
+            <div className="
+              flex flex-nowrap space-x-4 md:space-x-8 mx-auto
+              max-w-[14rem] sm:max-w-[14rem]
+              "
             >
-              Home
-            </Link>
-            <Link 
-              href="/documentation" 
-              className={`text-lg font-semibold transition-colors ${
-                pathname.startsWith("/documentation") ? "text-blue-300" : " hover:text-blue-200"
-              }`}
-            >
-              Documentation
-            </Link>
-            <Link 
-              href="/about-us" 
-              className={`text-lg font-semibold transition-colors ${
-                pathname.startsWith("/about-us") ? "text-blue-300" : " hover:text-blue-200"
-              }`}
-            >
-              About Us
-            </Link>
-            <Link 
-              href="/our-team" 
-              className={`text-lg font-semibold transition-colors ${
-                pathname.startsWith("/our-team") ? "text-blue-300" : "hover:text-blue-200"
-              }`}
-            >
-              Our Team
-            </Link>
+              {navItems.map(({label, href, key}) => (
+                <Link
+                  key={key}
+                  href={href}
+                  className={`
+                    flex-shrink-0 whitespace-nowrap text-lg font-semibold transition-colors
+                    ${isActive(href) ? "text-blue-300" : "hover:text-blue-200"}
+                  `}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
-          
-          
         </div>
       </div>
     </nav>

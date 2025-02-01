@@ -14,6 +14,13 @@ export default function DocumentationPage() {
     const descriptionDevlopment = `Explore advanced configurations and customization \
     options for power users.`;
 
+    const description = [
+      {description: descriptionStart, link: "start", title: "Quick Start"},
+      {description: descriptionUserGuide, link: "user-guide", title: "User Guide"},
+      {description: descriptionApiRef, link: "api-ref", title: "API Reference"},
+      {description: descriptionDevlopment, link: "developer-hack", title: "Developer HACK"},
+    ];
+
 
 
     return (
@@ -26,7 +33,7 @@ export default function DocumentationPage() {
           <div className="space-y-2">
             <h1 
               style={{marginTop: "5%", marginLeft: "10%", color: WHITE} }
-              className=" font-bold text-2xl"
+              className=" font-bold text-base sm:text-lg md:text-xl lg:text-2xl"
             >
               Newest Version: {" "}
               <Link 
@@ -34,7 +41,8 @@ export default function DocumentationPage() {
                 // style={{color: WHITE}}
                 // when hover over, get transparent and + underline
                 className="font-normal text-blue-200 hover:text-blue-300 
-                  transition-colors hover:underline underline-offset-4"
+                  transition-colors hover:underline underline-offset-4
+                  text-sm sm:text-base md:text-lg" // fluid text size
                 onClick={(e) => {
                   e.preventDefault(); // Prevent default link behavior
                 }}
@@ -44,14 +52,15 @@ export default function DocumentationPage() {
             </h1>
             <h1 
               style={{marginLeft: "10%", color: WHITE} }
-              className="font-bold text-2xl"
+              className="font-bold text-base sm:text-lg md:text-xl lg:text-2xl"
             >
               Previous Versions: {" "}
               <Link 
                 href="/#" // direct to new version description
                 // style={{color: WHITE}}
                 className="font-normal text-blue-200 hover:text-blue-300 
-                  transition-colors hover:underline underline-offset-4"
+                  transition-colors hover:underline underline-offset-4
+                  text-sm sm:text-base md:text-lg" // fluid text size
                 onClick={(e) => {
                   e.preventDefault(); // Prevent default link behavior
                 }}
@@ -61,7 +70,7 @@ export default function DocumentationPage() {
             </h1>
             <h1 
               style={{marginLeft: "10%", color: WHITE}}
-              className="font-bold text-2xl"
+              className="font-bold text-base sm:text-lg md:text-xl lg:text-2xl"
             >
               Useful Resources and Help: {" "}
               <div className="inline-block space-x-2">
@@ -71,7 +80,8 @@ export default function DocumentationPage() {
                       href="/#"
                       className="font-normal text-blue-200
                        hover:text-blue-300 transition-colors 
-                       hover:underline underline-offset-4"
+                       hover:underline underline-offset-4
+                       text-sm sm:text-base md:text-lg" // fluid text size
                       onClick={(e) => e.preventDefault()}
                     >
                       link
@@ -87,6 +97,16 @@ export default function DocumentationPage() {
         {/* Cards */}
         <div className="mx-auto max-w-7xl grid 
           grid-cols-1 md:grid-cols-2 gap-6">
+          {description.map(({description, link, title}) => (
+            <Cards 
+              key = {title} // unique key
+              link={link}
+              title={title}
+              description={description}
+            >
+            </Cards>
+          ))}
+{/* 
           <Cards 
             link="start"
             title="Quick Start"
@@ -110,7 +130,7 @@ export default function DocumentationPage() {
             title="Developer HACK"
             description={descriptionDevlopment}
           >
-          </Cards>
+          </Cards> */}
         </div>
         
       </div>
