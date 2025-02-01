@@ -17,7 +17,7 @@ export default function CodeBlock({ code, language = 'python' }) {
       <pre className="
         bg-gray-800 rounded-md 
         p-2 my-3 overflow-x-auto
-        text-xs leading-5
+        text-sm leading-5
         shadow-sm
         transition-all duration-200
       ">

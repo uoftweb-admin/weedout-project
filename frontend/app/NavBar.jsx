@@ -28,7 +28,7 @@ export default function Navbar({navItems = defaultNavItems}) {
   };
 
   return (
-    <nav className="sticky top-0 z-100 bg-customGreen shadow-md">
+    <nav className="sticky top-0 z-[100] bg-customGreen shadow-md">
       <div className="max-w-7xl mx-auto px-4 color-beige">
         <div className="flex justify-between items-center h-16">
           {/* Left-aligned logo and title */}

@@ -15,8 +15,8 @@ export default function Sidebar({
   return (
     <div
       className={`
-        fixed top-0 left-0 w-64 bg-beige min-h-screen p-4 overflow-y-auto
-        transform transition-transform duration-300 z-50 
+        fixed top-0.5 left-0 w-64 bg-beige min-h-screen p-4 overflow-y-auto
+        transform transition-transform duration-300 z-[40] 
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}
     >
