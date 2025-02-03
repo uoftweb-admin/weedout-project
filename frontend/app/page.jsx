@@ -1,8 +1,14 @@
 import Image from "next/image";
+import { Inria_Serif } from '@next/font/google';
+
+const inriaSerif = Inria_Serif({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
 
 export default function Home() {
   return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-800 to-emerald-900">
+      <div className={`min-h-screen bg-gradient-to-b from-emerald-800 to-emerald-900 ${inriaSerif.className}`}>
         {/* Hero Section */}
         <div className="pt-32 pb-20 px-6">
           <div className="max-w-7xl mx-auto">
