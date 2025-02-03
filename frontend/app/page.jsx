@@ -15,18 +15,18 @@ export default function Home() {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="space-y-8">
                 <div>
-                  <h1 className="text-6xl font-bold text-white mb-4">
+                  <h1 className="text-6xl font-bold text-beige mb-4">
                     Data Pre-processing
                     <span className="block text-emerald-300">Simplified</span>
                   </h1>
-                  <p className="text-xl text-white/80 leading-relaxed">
+                  <p className="text-xl text-beige/80 leading-relaxed">
                     A powerful tool designed to streamline your data preparation
                     workflow with advanced preprocessing capabilities.
                   </p>
                 </div>
 
                 <div className="flex flex-wrap gap-4">
-                  <button className="px-8 py-3 bg-white text-emerald-900 rounded-lg font-medium
+                  <button className="px-8 py-3 bg-beige text-emerald-900 rounded-lg font-medium
                   hover:bg-emerald-50 active:bg-emerald-100 transform hover:-translate-y-0.5
                   transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50">
                     Try it out
@@ -35,7 +35,7 @@ export default function Home() {
                       href="https://github.com/rohannair2022/weedout"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-8 py-3 bg-emerald-700/30 text-white border border-emerald-500/30
+                      className="px-8 py-3 bg-emerald-700/30 text-beige border border-emerald-500/30
                     rounded-lg font-medium hover:bg-emerald-700/40 active:bg-emerald-700/50
                     transform hover:-translate-y-0.5 transition-all duration-200
                     focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
@@ -54,7 +54,7 @@ export default function Home() {
                       height={24}
                       className="group-hover:scale-110 transition-transform duration-200"
                   />
-                  <code className="text-white font-mono">pip install weedout</code>
+                  <code className="text-beige font-mono">pip install weedout</code>
                 </div>
               </div>
 
@@ -75,7 +75,7 @@ export default function Home() {
         {/* Latest Changes */}
         <div className="bg-black/20 py-20 px-6">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-12 text-center">
+            <h2 className="text-3xl font-bold text-beige mb-12 text-center">
               Latest Changes
             </h2>
 
@@ -98,9 +98,9 @@ export default function Home() {
                   >
                     <div className="font-mono mb-2">
                       <span className="text-emerald-300">Version</span>
-                      <span className="text-white ml-2">{version}</span>
+                      <span className="text-beige ml-2">{version}</span>
                     </div>
-                    <div className="text-white/80 mb-4">{note}</div>
+                    <div className="text-beige/80 mb-4">{note}</div>
                     <a
                         href={`/downloads/${version}`}
                         className="text-emerald-300 hover:text-emerald-200 font-medium text-sm
