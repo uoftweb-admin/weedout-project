@@ -66,10 +66,14 @@ export default function AboutUsPage() {
         {/* End of beige div*/}
       </section>
 
+      <h4 className="text-beige mt-11 sm:px-10 lg:px-20 text-2xl sm:text-3xl font-bold lg:pt-20">
+  Why WeedOut?
+</h4>
+
 
 
       <section>
-        <div className=" mt-32 mx-auto rounded-lg py-6 lg:py-10 max-w-[95%] md:max-w-[85%] lg:max-w-[80rem]">
+        <div className=" mx-auto rounded-lg py-6 lg:py-10 max-w-[95%] md:max-w-[85%] lg:max-w-[80rem]">
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-9">
             {/* Box 1 */}
@@ -124,6 +128,92 @@ export default function AboutUsPage() {
 
 
       </section>
+
+      <h4 className="text-beige mt-3 sm:px-10 lg:px-20 text-2xl sm:text-3xl font-bold lg:pt-20">
+        Our Values
+      </h4>
+
+      {/* Our Values */}
+      <section className="pb-28">
+        <div className="bg-beige mt-8 mx-auto rounded-lg px-4 py-6 sm:px-6 lg:px-10 lg:py-10 max-w-[95%] md:max-w-[85%] lg:max-w-[80rem] h-auto">
+          {/* Grid Container for Dark Blue Boxes */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            {/* Box 1 */}
+            <div className="bg-blueText p-6 rounded-lg shadow-md hover:shadow-xl hover:ring-4 hover:ring-blue-400 transition duration-300 hover:scale-105 flex items-center justify-center text-center h-full min-h-[50vh]">
+              <div>
+                <h3 className="text-beige text-xl font-bold mb-2">
+                  Innovation and Simplicity
+                </h3>
+                <p className="text-beige text-sm">
+                  We strive to create innovative solutions that simplify complex data pre-processing tasks. WeedOut is designed to be intuitive and efficient, empowering users to focus on what matters most—developing impactful machine learning models.
+                </p>
+              </div>
+            </div>
+
+            {/* Box 2 */}
+            <div className="bg-blueText p-6 rounded-lg shadow-md hover:shadow-xl hover:ring-4 hover:ring-blue-400 transition duration-300 hover:scale-105 flex items-center justify-center text-center h-full min-h-[50vh]">
+              <div>
+                <h3 className="text-beige text-xl font-bold mb-2">
+                  Community and Collaboration
+                </h3>
+                <p className="text-beige text-sm">
+                  WeedOut thrives on community engagement. We believe in the power of collaboration and welcome contributions from developers, data scientists, and enthusiasts alike. Together, we can build tools that drive the future of data science.
+                </p>
+              </div>
+            </div>
+
+            {/* Box 3 */}
+            <div className="bg-blueText p-6 rounded-lg shadow-md hover:shadow-xl hover:ring-4 hover:ring-blue-400 transition duration-300 hover:scale-105 flex items-center justify-center text-center h-full min-h-[50vh]">
+              <div>
+                <h3 className="text-beige text-xl font-bold mb-2">
+                  Transparency and Quality
+                </h3>
+                <p className="text-beige text-sm">
+                  We are committed to maintaining and delivering high-quality, reliable tools. From clean code to comprehensive documentation, we prioritize accuracy and performance to support data-driven decision making.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Want to Contribute? */}
+
+
+      <section className="pb-12">
+        <div className="bg-beige mt-10 mx-auto rounded-lg px-4 py-6 sm:px-6 lg:px-10 lg:py-10 max-w-[95%] md:max-w-[85%] lg:max-w-[80rem] h-auto">
+
+
+          <h3 className="text-blueText text-xl sm:text-2xl font-bold">
+            Want to Contribute?
+          </h3>
+
+          <p className="text-blueText mt-4 text-sm sm:text-base lg:text-lg leading-relaxed">
+          WeedOut is an open-source Python package for data preprocessing, and we'd 
+          love your help in making it even better! Whether you're a coding whiz, 
+          documentation guru, or data science enthusiast, there's a way for you to 
+          contribute. You can help by improving our code, adding new features, writing 
+          tests, enhancing documentation, reporting bugs, or even sharing your experience 
+          with WeedOut. Every contribution, big or small, helps us grow and innovate. 
+          Check out our GitHub repository to get started:
+          </p>
+
+          <a href="https://github.com/rohannair2022/Weedout" target="_blank" rel="noopener noreferrer">
+            <div className="flex justify-center mt-6">
+              <button className="bg-blueText text-white text-lg font-semibold px-6 py-3 rounded-full shadow-md 
+                                hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
+                                transition duration-300 ease-in-out">
+                WeedOut's GitHub Repository
+              </button>
+            </div>
+          </a>
+
+        </div>
+
+      </section>
+
 
 
     </div>
