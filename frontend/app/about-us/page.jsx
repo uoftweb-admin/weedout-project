@@ -200,7 +200,7 @@ export default function AboutUsPage() {
           Check out our GitHub repository to get started:
           </p>
 
-          <a href="https://github.com/rohannair2022/Weedout" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/rohannair2022/Weedout?tab=readme-ov-file#how-can-you-contribute-to-weedout" target="_blank" rel="noopener noreferrer">
             <div className="flex justify-center mt-6">
               <button className="bg-blueText text-white text-lg font-semibold px-6 py-3 rounded-full shadow-md 
                                 hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
