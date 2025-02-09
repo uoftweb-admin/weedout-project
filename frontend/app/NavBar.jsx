@@ -1,51 +1,73 @@
-"use client"
+"use client";
+
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation.js';
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-  const [lastScroll, setLastScroll] = useState(0);
-  const [hidden, setHidden] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      setScrolled(currentScroll > 20);
-      setHidden(currentScroll > lastScroll && currentScroll > 80);
-      setLastScroll(currentScroll);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScroll]);
+  const pathname = usePathname();
 
   return (
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${
-          scrolled ? 'bg-emerald-900/90 backdrop-blur shadow-lg' : 'bg-transparent'
-      } ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-xl font-bold text-white hover:text-emerald-200 transition-colors">
-              WeedOut
-            </Link>
-            <div className="flex space-x-8">
-              {[
-                { name: 'Documentation', href: '/documentation' },
-                { name: 'About Us', href: '/about-us' },
-                { name: 'Our Team', href: '/our-team' }
-              ].map(({ name, href }) => (
-                  <Link
-                      key={name}
-                      href={href}
-                      className="relative text-white/80 hover:text-white transition-colors group"
-                  >
-                    {name}
-                    <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-emerald-300 scale-x-0 group-hover:scale-x-100 transition-transform" />
-                  </Link>
-              ))}
-            </div>
+    <nav 
+      style={ {background: "#007057" }}
+      className="w-full shadow-md sticky top-0 z-50"
+    >
+      <div 
+        style = {{color: "#EDF5E1"}}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      >
+        <div className="flex justify-between items-center h-20">
+          {/* Left-aligned logo and title */}
+          {/* WeedOut Title */}
+          <div className="flex items-center space-x-2">
+            <img 
+              src="/favicon.ico" 
+              alt="Logo"
+              className="h-8 w-8"
+            />
+            <span className="text-2xl font-bold">WeedOut</span>
           </div>
+
+          {/* Centered navigation links */}
+          <div className="hidden md:flex flex-1 justify-center items-center space-x-8">
+            <Link 
+              href="/" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname === "/" ? "text-blue-300" : " hover:text-blue-200"
+              }`}
+            >
+              Home
+            </Link>
+            <Link 
+              href="/documentation" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname.startsWith("/documentation") ? "text-blue-300" : " hover:text-blue-200"
+              }`}
+            >
+              Documentation
+            </Link>
+            <Link 
+              href="/about-us" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname.startsWith("/about-us") ? "text-blue-300" : " hover:text-blue-200"
+              }`}
+            >
+              About Us
+            </Link>
+            <Link 
+              href="/our-team" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname.startsWith("/our-team") ? "text-blue-300" : "hover:text-blue-200"
+              }`}
+            >
+              Our Team
+            </Link>
+          </div>
+          
+          
         </div>
-      </nav>
+      </div>
+    </nav>
   );
 }
