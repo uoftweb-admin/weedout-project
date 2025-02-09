@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation.js';
-import { GREEN, BLUE, WHITE } from "./documentation/colors.js";
 
 export default function Navbar() {
 
@@ -11,11 +10,11 @@ export default function Navbar() {
 
   return (
     <nav 
-      style={ {background: GREEN }}
+      style={ {background: "#007057" }}
       className="w-full shadow-md sticky top-0 z-50"
     >
       <div 
-        style = {{color: WHITE}}
+        style = {{color: "#EDF5E1"}}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
       >
         <div className="flex justify-between items-center h-20">
