@@ -11,35 +11,45 @@ import { useUI } from "../../UIProvider.js";
 
 // side bar data structure
 const sidebarItems = [
-    {
-        title: "10 minutes to weedout",
-        hasChildren: false,
-        content: "10-minutes-to-weedout-content",
-    },
-    {
-        title: "weedout.preprocess",
-        hasChildren: true,
-        children: [
-        { title: "check_target_variable", content: "check_target_variable-content" },
-        { title: "Basic Concepts", content: "basic-concepts" },
-        ],
-    },
-    {
-        title: "weedout.datainfo",
-        hasChildren: true,
-        children: [
-        { title: "Series", content: "series-content" },
-        { title: "DataFrame", content: "dataframe-content" },
-        ],
-    },
-    {
-        title: "weedout.visualization",
-        hasChildren: true,
-        children: [
-        { title: "Preprocessing", content: "preprocessing" },
-        { title: "Visualization", content: "visualization" },
-        ],
-    },
+  {
+    title: "10 minutes to weedout",
+    hasChildren: false,
+    content: "10-minutes-to-weedout-content",
+  },
+  {
+    title: "weedout.preprocess",
+    hasChildren: true,
+    children: [
+      { title: "check_target_variable", content: "check_target_variable-content" },
+      { title: "check_duplicate_columns", content: "check_duplicate_columns-content" },
+      { title: "initial_check_dt", content: "initial_check_dt-content" },
+      { title: "cross_sectional_imputation", content: "cross_sectional_imputation-content" },
+      { title: "time_series_imputation", content: "time_series_imputation-content" },
+      { title: "handle_imbalanced_data", content: "handle_imbalanced_data-content" },
+      { title: "remove_outliers", content: "remove_outliers-content" },
+      { title: "separate_target_column", content: "separate_target_column-content" },
+      { title: "encoding", content: "encoding-content" },
+      { title: "feature_scaling", content: "feature_scaling-content" },
+      { title: "combine", content: "combine-content" },
+      { title: "preprocess_pipeline", content: "preprocess_pipeline-content" },
+    ],
+  },
+  {
+    title: "weedout.datainfo",
+    hasChildren: true,
+    children: [
+      { title: "filtered_correlation_matrix", content: "filtered_correlation_matrix-content" },
+      { title: "display", content: "display-content" },
+    ],
+  },
+  {
+    title: "weedout.visualization",
+    hasChildren: true,
+    children: [
+      { title: "show_removed_outliers", content: "show_removed_outliers-content" },
+      { title: "plot_filtered_correlation_matrix", content: "plot_filtered_correlation_matrix-content" },
+    ],
+  },
 ];
 
 export default function UserGuidePage() {

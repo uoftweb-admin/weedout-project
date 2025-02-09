@@ -1,27 +1,37 @@
 // app/documentation/user-guide/CodeBlock.jsx
 "use client";
-import { useEffect } from 'react';
+import { useEffect, useRef, useLayoutEffect } from 'react';
 import hljs from 'highlight.js/lib/core';
 import python from 'highlight.js/lib/languages/python';
-import 'highlight.js/styles/vs2015.css';
+import 'highlight.js/styles/atom-one-dark.css';
 
 hljs.registerLanguage('python', python);
 
 export default function CodeBlock({ code, language = 'python' }) {
-  useEffect(() => {
-    hljs.highlightAll();
-  }, []);
+  const codeRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (codeRef.current) {
+      // Clear the content before re-highlighting it
+      codeRef.current.textContent = code;
+      hljs.highlightElement(codeRef.current);
+    }
+  }, [code, language]);
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(code);
+  };
 
   return (
     <div className="relative group">
       <pre className="
-        bg-gray-800 rounded-md 
+        !bg-gray-800 rounded-md 
         p-2 my-3 overflow-x-auto
         text-sm leading-5
         shadow-sm
         transition-all duration-200
       ">
-        <code className={`language-${language} font-mono`}>
+        <code className={`language-${language} font-mono !bg-gray-800 !text-gray-200`}>
           {code}
         </code>
       </pre>
@@ -35,7 +45,7 @@ export default function CodeBlock({ code, language = 'python' }) {
           bg-gray-700/50 rounded px-2 py-1 text-xs
           backdrop-blur-sm
         "
-        onClick={() => navigator.clipboard.writeText(code)}
+        onClick={copyCode}
       >
         Copy
       </button>
