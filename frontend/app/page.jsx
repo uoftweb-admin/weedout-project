@@ -8,7 +8,7 @@ const inriaSerif = Inria_Serif({
 
 export default function Home() {
   return (
-      <div className={`min-h-screen bg-gradient-to-b from-emerald-800 to-emerald-900 ${inriaSerif.className}`}>
+      <div className={`min-h-screen bg-gradient-to-b from-[#007057] to-emerald-900 ${inriaSerif.className}`}>
         {/* Hero Section */}
         <div className="pt-32 pb-20 px-6">
           <div className="max-w-7xl mx-auto">
