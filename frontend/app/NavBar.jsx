@@ -5,6 +5,12 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation.js';
 // import { GREEN, BLUE, WHITE } from "./documentation/colors.js";
 import { UIProvider, useUI } from "./UIProvider.js";
+import { Inria_Serif } from '@next/font/google';
+
+const inriaSerif = Inria_Serif({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
 
 const defaultNavItems = [
   { label: "Home", href: "/", key: "home-key" },
@@ -28,7 +34,7 @@ export default function Navbar({navItems = defaultNavItems}) {
   };
 
   return (
-    <nav className="sticky top-0 z-[100] bg-customGreen shadow-md">
+    <nav className={`sticky top-0 z-[100] bg-customGreen shadow-md ${inriaSerif.className}`}>
       <div className="max-w-7xl mx-auto px-4 color-beige">
         <div className="flex justify-between items-center h-16">
           {/* Left-aligned logo and title */}
@@ -63,10 +69,19 @@ export default function Navbar({navItems = defaultNavItems}) {
                   href={href}
                   className={`
                     flex-shrink-0 whitespace-nowrap text-lg font-semibold transition-colors
-                    ${isActive(href) ? "text-blue-300" : "hover:text-blue-200"}
+                    relative pb-0 
+                    ${isActive(href) 
+                      ? "text-blue-300 after:scale-100" 
+                      : "hover:text-blue-200 after:scale-0"}
+                    after:content-[''] after:absolute 
+                    after:bottom-0 after:left-0 
+                    after:w-full after:h-[2px] 
+                    after:bg-blue-300 
+                    after:transition-transform after:duration-300
                   `}
                 >
                   {label}
+                  
                 </Link>
               ))}
             </div>

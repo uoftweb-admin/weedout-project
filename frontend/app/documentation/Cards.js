@@ -1,6 +1,12 @@
 import React from "react";
 import { GREEN, BLUE, WHITE } from "./colors";
 import Link from "next/link";
+import { Inria_Serif } from '@next/font/google';
+
+const inriaSerif = Inria_Serif({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
 
 export default function Cards({ link, title, description, children }) {
     return (
@@ -10,8 +16,8 @@ export default function Cards({ link, title, description, children }) {
             background: WHITE,
             color: BLUE,
           }}
-          className=" rounded-xl shadow-lg hover:shadow-xl
-           transition-shadow duration-300 p-8 h-full flex flex-col"
+        className={` rounded-xl shadow-lg hover:shadow-xl
+        transition-shadow duration-300 p-8 h-full flex flex-col ${inriaSerif.className}`}
         >
             {/* title and descriptions */}
             <div className="flex-1 text-center">

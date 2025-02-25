@@ -4,21 +4,27 @@ import React from "react";
 import Cards from "./Cards";
 import Link from "next/link"
 import { GREEN, BLUE, WHITE } from "./colors";
+import { Inria_Serif } from '@next/font/google';
+
+const inriaSerif = Inria_Serif({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
 
 export default function DocumentationPage() {
     const descriptionStart = `New to WeedOut? Check out the getting started guides. \
     They contain an introduction to WeedOut main concepts.`;
-    const descriptionUserGuide = `The user guide provides in-depth information on the \
+    const descriptionUserGuide = `The api reference provides in-depth information on the \
     key concepts with useful background information.`;
-    const descriptionApiRef = `Step-by-step guide to API ref`;
-    const descriptionDevlopment = `Explore advanced configurations and customization \
+    // const descriptionApiRef = `Step-by-step guide to API ref`;
+    const descriptionContributor = `Explore advanced configurations and customization \
     options for power users.`;
 
     const description = [
       {description: descriptionStart, link: "start", title: "Quick Start"},
-      {description: descriptionUserGuide, link: "user-guide", title: "User Guide"},
-      {description: descriptionApiRef, link: "api-ref", title: "API Reference"},
-      {description: descriptionDevlopment, link: "developer-hack", title: "Developer HACK"},
+      {description: descriptionUserGuide, link: "api-ref", title: "API Reference"},
+      // {description: descriptionApiRef, link: "api-ref", title: "API Reference"},
+      {description: descriptionContributor, link: "contributors-guide", title: "Contributors' Guide"},
     ];
 
 
@@ -26,7 +32,7 @@ export default function DocumentationPage() {
     return (
       <div
         style={{backgroundColor: GREEN}}
-        className="min-h-screen p-4 sm:p-6 md:p-8"
+        className={`min-h-screen p-4 sm:p-6 md:p-8, ${inriaSerif.className}`}
       >
         {/* Header Section */}
         <div className="mx-auto max-w-7xl mb-8 space-y-6">

@@ -4,6 +4,12 @@ import { useEffect, useRef, useLayoutEffect } from 'react';
 import hljs from 'highlight.js/lib/core';
 import python from 'highlight.js/lib/languages/python';
 import 'highlight.js/styles/atom-one-dark.css';
+import { Inria_Serif } from '@next/font/google';
+
+const inriaSerif = Inria_Serif({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
 
 hljs.registerLanguage('python', python);
 
@@ -23,28 +29,30 @@ export default function CodeBlock({ code, language = 'python' }) {
   };
 
   return (
-    <div className="relative group">
-      <pre className="
+    <div className={`relative group ${inriaSerif.className}
+    `}>
+      <pre className={`
         !bg-gray-800 rounded-md 
         p-2 my-3 overflow-x-auto
         text-sm leading-5
         shadow-sm
         transition-all duration-200
-      ">
-        <code className={`language-${language} font-mono !bg-gray-800 !text-gray-200`}>
+        ${inriaSerif.className}
+      `}>
+        <code className={`language-${language} font-mono !bg-gray-800 !text-gray-200 ${inriaSerif.className}`}>
           {code}
         </code>
       </pre>
       
       {/* copy button */}
       <button
-        className="
+        className={`
           absolute top-2 right-2 opacity-0 group-hover:opacity-100
           text-gray-400 hover:text-gray-200
           transition-opacity duration-200
           bg-gray-700/50 rounded px-2 py-1 text-xs
-          backdrop-blur-sm
-        "
+          backdrop-blur-sm ${inriaSerif.className}
+        `}
         onClick={copyCode}
       >
         Copy
