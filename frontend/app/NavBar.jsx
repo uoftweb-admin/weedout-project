@@ -1,5 +1,11 @@
 "use client";
 
+const inriaSerif = Inria_Serif({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
+
+import { Inria_Serif } from '@next/font/google';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation.js';
@@ -11,7 +17,7 @@ export default function Navbar() {
   return (
     <nav 
       style={ {background: "#007057" }}
-      className="w-full shadow-md sticky top-0 z-50"
+      className={`w-full shadow-md sticky top-0 z-50 ${inriaSerif.className}`}
     >
       <div 
         style = {{color: "#EDF5E1"}}
@@ -22,23 +28,30 @@ export default function Navbar() {
           {/* WeedOut Title */}
           <div className="flex items-center space-x-2">
             <img 
-              src="/favicon.ico" 
+              src="/dull_logo_bria.png" 
               alt="Logo"
-              className="h-8 w-8"
+              className="h-12 w-9"
             />
-            <span className="text-2xl font-bold">WeedOut</span>
-          </div>
-
-          {/* Centered navigation links */}
-          <div className="hidden md:flex flex-1 justify-center items-center space-x-8">
             <Link 
               href="/" 
               className={`text-lg font-semibold transition-colors ${
                 pathname === "/" ? "text-blue-300" : " hover:text-blue-200"
               }`}
             >
-              Home
+              <span className="text-2xl font-bold">WeedOut</span>
             </Link>
+          </div>
+
+          {/* Centered navigation links */}
+          <div className="hidden md:flex flex-1 justify-center items-center space-x-8">
+            {/* <Link 
+              href="/" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname === "/" ? "text-blue-300" : " hover:text-blue-200"
+              }`}
+            >
+              Home
+            </Link> */}
             <Link 
               href="/documentation" 
               className={`text-lg font-semibold transition-colors ${

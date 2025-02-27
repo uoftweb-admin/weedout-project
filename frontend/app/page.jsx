@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Inria_Serif } from '@next/font/google';
 
+
 const inriaSerif = Inria_Serif({
   subsets: ['latin'],
   weight: ['400', '700'],
@@ -48,7 +49,7 @@ export default function Home() {
                 items-center space-x-4 hover:bg-black/30 transition-all duration-200
                 cursor-pointer transform hover:-translate-y-0.5">
                   <Image
-                      src="/python-logo.webp"
+                      src="/python_logo_processed.png"
                       alt="Python Logo"
                       width={24}
                       height={24}
@@ -61,7 +62,7 @@ export default function Home() {
               <div className="relative flex justify-center lg:justify-end">
                 <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full animate-pulse"></div>
                 <Image
-                    src="/dog.png"
+                    src="/dull_logo_bria.png"
                     alt="WeedOut Logo"
                     width={400}
                     height={400}
@@ -79,7 +80,7 @@ export default function Home() {
               Latest Changes
             </h2>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={`grid md:grid-cols-2 lg:grid-cols-3 gap-6 ${inriaSerif.className}`}>
               {[
                 { version: "1.4.0", note: "Added new visualization tools", highlight: true },
                 { version: "1.3.0", note: "Improved performance" },
@@ -97,7 +98,7 @@ export default function Home() {
                       }`}
                   >
                     <div className="font-mono mb-2">
-                      <span className="text-emerald-300">Version</span>
+                      <span className={`text-emerald-300 ${inriaSerif.className}`}>Version</span>
                       <span className="text-beige ml-2">{version}</span>
                     </div>
                     <div className="text-beige/80 mb-4">{note}</div>
