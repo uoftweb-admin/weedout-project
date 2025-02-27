@@ -1,16 +1,14 @@
 "use client";
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation.js';
-// import { GREEN, BLUE, WHITE } from "./documentation/colors.js";
-import { UIProvider, useUI } from "./UIProvider.js";
-import { Inria_Serif } from '@next/font/google';
-
 const inriaSerif = Inria_Serif({
   subsets: ['latin'],
   weight: ['400', '700'],
 });
+
+import { Inria_Serif } from '@next/font/google';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation.js';
 
 const defaultNavItems = [
   { label: "Home", href: "/", key: "home-key" },
@@ -34,57 +32,67 @@ export default function Navbar({navItems = defaultNavItems}) {
   };
 
   return (
-    <nav className={`sticky top-0 z-[100] bg-customGreen shadow-md ${inriaSerif.className}`}>
-      <div className="max-w-7xl mx-auto px-4 color-beige">
-        <div className="flex justify-between items-center h-16">
+    <nav 
+      style={ {background: "#007057" }}
+      className={`w-full shadow-md sticky top-0 z-50 ${inriaSerif.className}`}
+    >
+      <div 
+        style = {{color: "#EDF5E1"}}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      >
+        <div className="flex justify-between items-center h-20">
           {/* Left-aligned logo and title */}
           {/* WeedOut Title */}
           <div className="flex items-center space-x-2">
-            <button
-              className="p-2 hover:scale-110"
-              onClick={() => setSidebarOpen(!sidebarOpen)} // toggle sidebar
+            <img 
+              src="/dull_logo_bria.png" 
+              alt="Logo"
+              className="h-12 w-9"
+            />
+            <Link 
+              href="/" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname === "/" ? "text-blue-300" : " hover:text-blue-200"
+              }`}
             >
-              <img 
-                src="/favicon.ico" 
-                alt="Logo"
-                className="h-8 w-8"
-              />
-            </button>
-            {/* for small screen, we hind it */}
-            <span className="text-xl font-bold hidden sm:inline">WeedOut</span>
+              <span className="text-2xl font-bold">WeedOut</span>
+            </Link>
           </div>
 
-          {/* Navigation links */}
-          {/* nav bar：use flex-nowrap + overflow-x-auto control --> horizontal rolling */}
-          <div className='flex-1 flex overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200'>
-            {/* mobile and screen screen view, scrolling enabled */}
-            <div className="
-              flex flex-nowrap space-x-4 md:space-x-8 mx-auto
-              max-w-[14rem] sm:max-w-[14rem]
-              "
+          {/* Centered navigation links */}
+          <div className="hidden md:flex flex-1 justify-center items-center space-x-8">
+            {/* <Link 
+              href="/" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname === "/" ? "text-blue-300" : " hover:text-blue-200"
+              }`}
             >
-              {navItems.map(({label, href, key}) => (
-                <Link
-                  key={key}
-                  href={href}
-                  className={`
-                    flex-shrink-0 whitespace-nowrap text-lg font-semibold transition-colors
-                    relative pb-0 
-                    ${isActive(href) 
-                      ? "text-blue-300 after:scale-100" 
-                      : "hover:text-blue-200 after:scale-0"}
-                    after:content-[''] after:absolute 
-                    after:bottom-0 after:left-0 
-                    after:w-full after:h-[2px] 
-                    after:bg-blue-300 
-                    after:transition-transform after:duration-300
-                  `}
-                >
-                  {label}
-                  
-                </Link>
-              ))}
-            </div>
+              Home
+            </Link> */}
+            <Link 
+              href="/documentation" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname.startsWith("/documentation") ? "text-blue-300" : " hover:text-blue-200"
+              }`}
+            >
+              Documentation
+            </Link>
+            <Link 
+              href="/about-us" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname.startsWith("/about-us") ? "text-blue-300" : " hover:text-blue-200"
+              }`}
+            >
+              About Us
+            </Link>
+            <Link 
+              href="/our-team" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname.startsWith("/our-team") ? "text-blue-300" : "hover:text-blue-200"
+              }`}
+            >
+              Our Team
+            </Link>
           </div>
         </div>
       </div>
