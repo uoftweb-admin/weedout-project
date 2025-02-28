@@ -10,26 +10,9 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation.js';
 
-const defaultNavItems = [
-  { label: "Home", href: "/", key: "home-key" },
-  { label: "Documentation", href: "/documentation", key: "documentation-key" },
-  { label: "About Us", href: "/about-us", key: "about-us-key" },
-  { label: "Our Team", href: "/our-team", key: "our-team-key" },
-];
+export default function Navbar() {
 
-// if no navItems are passed, use the defaultNavItems
-export default function Navbar({navItems = defaultNavItems}) {
-  const { sidebarOpen, setSidebarOpen } = useUI();
   const pathname = usePathname();
-
-  // Function to check if the current link is active.
-  const isActive = (href) => {
-    // For exact match or starts with match for nested routes
-    if (href === "/") {
-      return pathname === "/";
-    }
-    return pathname.startsWith(href);
-  };
 
   return (
     <nav 
@@ -94,6 +77,8 @@ export default function Navbar({navItems = defaultNavItems}) {
               Our Team
             </Link>
           </div>
+          
+          
         </div>
       </div>
     </nav>
