@@ -53,7 +53,7 @@ export default function DocumentationPage() {
                   e.preventDefault(); // Prevent default link behavior
                 }}
               >
-                1.2 (MM/DD/YYYY)
+                1.4 (02/20/2025)
               </Link>
             </h1>
             <h1 
@@ -62,14 +62,14 @@ export default function DocumentationPage() {
             >
               Previous Versions: {" "}
               <Link 
-                href="/#" // direct to new version description
+                href="/" // direct to new version description
                 // style={{color: WHITE}}
                 className="font-normal text-blue-200 hover:text-blue-300 
                   transition-colors hover:underline underline-offset-4
                   text-sm sm:text-base md:text-lg" // fluid text size
-                onClick={(e) => {
-                  e.preventDefault(); // Prevent default link behavior
-                }}
+                // onClick={(e) => {
+                //   e.preventDefault(); // Prevent default link behavior
+                // }}
               >
                 link
               </Link>
