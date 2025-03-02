@@ -50,7 +50,7 @@ const teamData = [
     members: [
       {
         name: "Rohan Sunilkumar Nair",
-        position: "Project Lead ML Team / Web Dev on the Web Dev Team",
+        position: "Co-founder and ML Lead",
         linkedin: "https://www.linkedin.com/in/rohansunilkumarnair/",
         github: "https://github.com/rohannair2022",
         image: "/images/rohan-nair.jpg"
