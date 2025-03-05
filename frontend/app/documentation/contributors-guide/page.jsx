@@ -15,7 +15,7 @@ export default function ContributorsGuidePage() {
                 <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20">
                     {/* Responsive heading */}
                     <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold">
-                    Contributors Guide
+                    Contributor's Guide
                     </h1>
 
                     {/* Responsive beige box */}
