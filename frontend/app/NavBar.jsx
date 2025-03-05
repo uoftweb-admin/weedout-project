@@ -7,6 +7,7 @@ const inriaSerif = Inria_Serif({
 
 import { Inria_Serif } from '@next/font/google';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation.js';
 
@@ -27,11 +28,13 @@ export default function Navbar() {
           {/* Left-aligned logo and title */}
           {/* WeedOut Title */}
           <div className="flex items-center space-x-2">
-            <img 
+            <Link href="/">
+            <Image 
               src="/dull_logo_bria.png" 
               alt="Logo"
-              className="h-12 w-9"
+              width={36} height={48}
             />
+            </Link>
             <Link 
               href="/" 
               className={`text-lg font-semibold transition-colors ${
@@ -69,6 +72,14 @@ export default function Navbar() {
               About Us
             </Link>
             <Link 
+              href="/preprocessing" 
+              className={`text-lg font-semibold transition-colors ${
+                pathname.startsWith("/preprocessing") ? "text-blue-300" : " hover:text-blue-200"
+              }`}
+            >
+              Preprocessing-Demo
+            </Link>
+            <Link 
               href="/our-team" 
               className={`text-lg font-semibold transition-colors ${
                 pathname.startsWith("/our-team") ? "text-blue-300" : "hover:text-blue-200"
@@ -76,6 +87,7 @@ export default function Navbar() {
             >
               Our Team
             </Link>
+
           </div>
           
           

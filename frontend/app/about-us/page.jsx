@@ -11,7 +11,7 @@ export default function AboutUsPage() {
     <div className={`bg-customGreen w-full h-full ${inriaSerif.className}`}>
       <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20">
         {/* Responsive heading */}
-        <h1 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold">
+        <h1 className="text-beige text-3xl sm:text-4xl lg:text-5xl font-bold">
           About Us
         </h1>
 
@@ -24,8 +24,11 @@ export default function AboutUsPage() {
 
           {/* Responsive paragraph */}
           <p className="text-blueText mt-4 text-sm sm:text-base lg:text-lg leading-relaxed">
-            WeedOut is a robust and intuitive data pre-processing library
-            designed to optimize and accelerate machine learning workflows. By
+            Weedout is a Python library that helps you preprocess your data and
+            visualize it. It is an open-source library that is easy to use and has
+            a wide range of features. Built on top of pandas and matplotlib, WeedOut 
+            is a robust and intuitive data pre-processing library designed to optimize 
+            and accelerate machine learning workflows. By
             automating critical tasks such as data cleaning, transformation, and
             feature engineering, WeedOut eliminates the bottlenecks of manual
             pre-processing, enabling you to focus on model development and
@@ -177,41 +180,6 @@ export default function AboutUsPage() {
 
           </div>
         </div>
-      </section>
-
-      {/* Want to Contribute? */}
-
-
-      <section className="pb-12">
-        <div className="bg-beige mt-10 mx-auto rounded-lg px-4 py-6 sm:px-6 lg:px-10 lg:py-10 max-w-[95%] md:max-w-[85%] lg:max-w-[80rem] h-auto">
-
-
-          <h3 className="text-blueText text-xl sm:text-2xl font-bold">
-            Want to Contribute?
-          </h3>
-
-          <p className="text-blueText mt-4 text-sm sm:text-base lg:text-lg leading-relaxed">
-          WeedOut is an open-source Python package for data preprocessing, and we'd 
-          love your help in making it even better! Whether you're a coding whiz, 
-          documentation guru, or data science enthusiast, there's a way for you to 
-          contribute. You can help by improving our code, adding new features, writing 
-          tests, enhancing documentation, reporting bugs, or even sharing your experience 
-          with WeedOut. Every contribution, big or small, helps us grow and innovate. 
-          Check out our GitHub repository to get started:
-          </p>
-
-          <a href="https://github.com/rohannair2022/Weedout?tab=readme-ov-file#how-can-you-contribute-to-weedout" target="_blank" rel="noopener noreferrer">
-            <div className="flex justify-center mt-6">
-              <button className="bg-blueText text-white text-lg font-semibold px-6 py-3 rounded-full shadow-md 
-                                hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
-                                transition duration-300 ease-in-out">
-                WeedOut's GitHub Repository
-              </button>
-            </div>
-          </a>
-
-        </div>
-
       </section>
 
 
