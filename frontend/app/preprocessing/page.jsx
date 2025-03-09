@@ -16,7 +16,7 @@ export default function Demo() {
   return (
     <div className={`${inriaSerif.className}`}>
       {/* About this demo */}
-      <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20 border-4">
+      <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20">
 
         <div className="flex items-center gap-2">
 
@@ -25,9 +25,10 @@ export default function Demo() {
           alt="Image of a Book"
           width={75}
           height={50}
+          className="relative transform hover:scale-110 transition-transform duration-500"
         />
 
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold">About this Demo</h3>
+          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold">About this Demo:</h3>
         </div>
 
         <p className="pt-5 pl-20">
@@ -46,7 +47,7 @@ export default function Demo() {
       </section>
 
       {/* How it works */}
-      <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20 border-4">
+      <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20">
 
         <div className="flex items-center gap-3">
         <Image 
@@ -54,9 +55,14 @@ export default function Demo() {
           alt="Image of a Book"
           width={65}
           height={40}
+          className="relative transform hover:scale-110 transition-transform duration-500"
         />
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold">How it Works</h3>
+          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold">How it Works:</h3>
         </div>
+
+        <p className="pt-5 pl-20">
+          You will be asked a set of questions about your dataset. These questions will ask you to:
+        </p>
 
         <ul className="list-decimal pl-24 pt-3">
           <li>Select your dataset type and model type (Regression or Classification).</li>
@@ -70,7 +76,7 @@ export default function Demo() {
       </section>
 
       {/* Why this is Useful */}
-      <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20 border-4">
+      <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20">
 
       <div className="flex items-center gap-2">
 
@@ -79,9 +85,10 @@ export default function Demo() {
         alt="Image of a Book"
         width={75}
         height={50}
+        className="relative transform hover:scale-110 transition-transform duration-500"
         />
 
-        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Why this is Useful</h3>
+        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Why this is Useful:</h3>
       </div>
 
       <ul className="list-disc pl-24 pt-3">
@@ -93,16 +100,16 @@ export default function Demo() {
       </section>
 
       {/* Ready to start? */}
-      <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20 border-4">
+      <section className="pt-10 lg:pt-20 px-4 sm:px-10 lg:px-20">
         <p className="text-1xl sm:text-1xl lg:text-2xl font-bold">
           Ready to start your demo? Click the button below!
         </p>
 
 
-        <div className="pt-3">
+        <div className="pt-5 pb-5">
           <button 
             onClick={() => router.push("/preprocessing/demo")} 
-            className="bg-blueText text-white text-lg font-semibold px-6 py-3 rounded-full shadow-md 
+            className="bg-blueText text-beige text-lg font-semibold px-6 py-3 rounded-full shadow-md 
             hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
             transition duration-300 ease-in-out">
                 WeedOut Demo
