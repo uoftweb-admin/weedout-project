@@ -101,7 +101,7 @@ export default function page() {
       </section>
 
       {/* Dataset and Model Type Questions */}
-      <section className="border-4 lg:pt-16 sm:pt-16 px-4 sm:px-10 lg:px-20">
+      <section className="border-4 lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
         
         <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md border border-blueText">
         <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
@@ -160,6 +160,62 @@ export default function page() {
       </section>
 
       {/* Columns Configuration */}
+      <section className="border-4 lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
+        <div className="w-full max-w-4xl mx-auto p-6 bg-beige shadow-md border border-blueText mb-14">
+          <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
+            Column Configuration
+          </h2>
+          <div className="space-y-4">
+            {/* Target Column */}
+            <div>
+              <label className="block text-sm font-medium text-blueText">
+                Target Column
+              </label>
+              <input
+                type="text"
+                placeholder="Enter target column name"
+                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Columns to Drop */}
+            <div>
+              <label className="block text-sm font-medium text-blueText">
+                Columns to Drop
+              </label>
+              <input
+                type="text"
+                placeholder="Enter column names separated by comma"
+                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* ID Columns */}
+            <div>
+              <label className="block text-sm font-medium text-blueText">
+                ID Columns
+              </label>
+              <input
+                type="text"
+                placeholder="Enter ID column names"
+                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Columns to Not Scale/Encode */}
+            <div>
+              <label className="block text-sm font-medium text-blueText">
+                Columns to Not Scale/Encode
+              </label>
+              <input
+                type="text"
+                placeholder="Enter column names separated by comma"
+                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
 
         
     </div>
