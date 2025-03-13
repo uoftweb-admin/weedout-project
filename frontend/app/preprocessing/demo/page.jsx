@@ -220,7 +220,7 @@ export default function page() {
       {/* Button: Process Dataset */}
       <section className="flex justify-center items-center border-4">
           <button 
-            onClick={() => router.push("/preprocessing/demo")} 
+            onClick={() => router.push("/preprocessing/results")} 
             className="bg-blueText text-beige text-lg font-semibold px-8 py-3 rounded-md shadow-md 
             hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
             transition duration-300 ease-in-out">
