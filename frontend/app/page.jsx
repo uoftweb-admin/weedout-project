@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from 'next/link';
 import { Inria_Serif } from '@next/font/google';
 
 
@@ -27,11 +28,13 @@ export default function Home() {
                 </div>
 
                 <div className="flex flex-wrap gap-4">
+                <Link href="/preprocessing" passHref>
                   <button className="px-8 py-3 bg-beige text-emerald-900 rounded-lg font-medium
-                  hover:bg-emerald-50 active:bg-emerald-100 transform hover:-translate-y-0.5
-                  transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50">
+                    hover:bg-emerald-50 active:bg-emerald-100 transform hover:-translate-y-0.5
+                    transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50">
                     Try it out
                   </button>
+                </Link>
                   <a
                       href="https://github.com/rohannair2022/weedout"
                       target="_blank"
