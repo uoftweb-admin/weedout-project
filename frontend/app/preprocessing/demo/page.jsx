@@ -161,7 +161,7 @@ export default function page() {
 
       {/* Columns Configuration */}
       <section className="border-4 lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
-        <div className="w-full max-w-4xl mx-auto p-6 bg-beige shadow-md border border-blueText mb-14">
+        <div className="w-full max-w-4xl mx-auto p-6 bg-beige shadow-md border border-blueText mb-8">
           <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
             Column Configuration
           </h2>
@@ -215,6 +215,17 @@ export default function page() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Button: Process Dataset */}
+      <section className="flex justify-center items-center border-4">
+          <button 
+            onClick={() => router.push("/preprocessing/demo")} 
+            className="bg-blueText text-beige text-lg font-semibold px-8 py-3 rounded-md shadow-md 
+            hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
+            transition duration-300 ease-in-out">
+                Process Dataset
+          </button>
       </section>
 
         
