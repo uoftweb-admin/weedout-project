@@ -17,22 +17,57 @@ export default function page() {
 
     const [file, setFile] = useState(null);
 
-    const handleFileChange = (event) => {
-      if (event.target.files.length > 0) {
-        setFile(event.target.files[0]);
+    const handleFileChange = async (event) => {
+      // if (event.target.files.length > 0) {
+      //   setFile(event.target.files[0]);
+      // }
+      const selectedFile = event.target.files[0];
+      if (selectedFile) {
+        await saveFile(selectedFile);
       }
     };
   
-    const handleDrop = (event) => {
+    const handleDrop = async (event) => {
       event.preventDefault();
       const droppedFile = event.dataTransfer.files[0];
       if (droppedFile) {
-        setFile(droppedFile);
+        await saveFile(droppedFile);
       }
     };
   
     const handleDelete = () => {
       setFile(null);
+    };
+
+    const saveFile = async (selectedFile) => {
+      // Create a FormData object to send the file to an API route
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+  
+      try {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+    
+        const data = await response.json();
+    
+        if (!response.ok) {
+          throw new Error(data.error || "Unknown upload error");
+        }
+    
+        console.log("Upload Success:", data);
+        setFile({ name: "file.csv", size: selectedFile.size }); // Store an object
+        // setFile(data.fileName);
+      } catch (error) {
+        console.error("File upload failed:", error.message);
+      }
+    };
+
+    const handleProcessDataset = () => {
+      if (file) {
+        router.push(`/preprocessing/results?file=${file}`);
+      }
     };
 
   return (
@@ -86,7 +121,10 @@ export default function page() {
               </>
             ) : (
               <div className="flex items-center justify-between p-3 bg-gray-100 border border-gray-300 rounded-md">
-                <p className="text-blueText">{file.name}</p>
+                {/* <p className="text-blueText">{file.name}</p> */}
+                <p className="text-blueText">
+                  {file ? file.name : "No file uploaded"}
+                </p>
                 <button
                   className="text-red-500 hover:text-red-700"
                   onClick={handleDelete}
