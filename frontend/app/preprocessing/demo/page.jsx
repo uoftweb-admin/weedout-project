@@ -47,7 +47,7 @@ export default function page() {
         </button>
 
       {/* Title section */}
-        <section className="border-4 lg:pt-6 px-4 sm:px-10 lg:px-20">
+        <section className=" lg:pt-6 px-4 sm:px-10 lg:px-20 mb-10">
           <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-infoBoxes">Data-Preprocessing Configuration</h3>
           <h4 className="text-sm sm:text-base lg:text-lg text-center pt-6 text-beige">
             Please answer the following questions to clean and prepare your dataset.
@@ -55,14 +55,14 @@ export default function page() {
         </section>
 
       {/* Upload Dataset section */}
-      <section className="border-4 lg:pt-6 px-4 sm:px-10 lg:px-20">
-          <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md border border-blueText ">
+      <section className=" lg:pt-6 px-4 sm:px-10 lg:px-20">
+          <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md ">
           <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
             Dataset Upload
           </h2>
 
           <div
-            className="border-dashed border-2 border-gray-300 rounded-lg p-6 text-center cursor-pointer"
+            className="border-dashed border-2 border-gray-300 rounded-lg p-6 text-center"
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
@@ -70,7 +70,7 @@ export default function page() {
               <>
                 <CloudUpload size={40} className="mx-auto text-[#1a365d]" />
                 <p className="text-blueText mt-2">
-                  Drag and drop your CSV file here or
+                  Drag and drop your CSV file here or:
                 </p>
                 <label className="mt-4 inline-block bg-blueText text-beige px-4 py-2 rounded-md cursor-pointer shadow-md 
                   hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
@@ -101,9 +101,9 @@ export default function page() {
       </section>
 
       {/* Dataset and Model Type Questions */}
-      <section className="border-4 lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
+      <section className=" lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
         
-        <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md border border-blueText">
+        <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md">
         <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
         Dataset and Model Type
       </h2>
@@ -137,9 +137,9 @@ export default function page() {
       </section>
 
       {/* Dataset Type Question */}
-      <section  className="border-4 lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
+      <section  className="lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
       
-        <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md border border-blueText">
+        <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md">
           <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
             Dataset Type
           </h2>
@@ -160,8 +160,8 @@ export default function page() {
       </section>
 
       {/* Columns Configuration */}
-      <section className="border-4 lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
-        <div className="w-full max-w-4xl mx-auto p-6 bg-beige shadow-md border border-blueText mb-8">
+      <section className=" lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
+        <div className="w-full max-w-4xl mx-auto p-6 bg-beige shadow-md mb-8">
           <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
             Column Configuration
           </h2>
@@ -174,7 +174,7 @@ export default function page() {
               <input
                 type="text"
                 placeholder="Enter target column name"
-                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full p-2 border text-customGreen border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -186,7 +186,7 @@ export default function page() {
               <input
                 type="text"
                 placeholder="Enter column names separated by comma"
-                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block text-customGreen w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -198,7 +198,7 @@ export default function page() {
               <input
                 type="text"
                 placeholder="Enter ID column names"
-                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none text-customGreen focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -210,7 +210,7 @@ export default function page() {
               <input
                 type="text"
                 placeholder="Enter column names separated by comma"
-                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full p-2 border text-customGreen border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
@@ -218,9 +218,9 @@ export default function page() {
       </section>
 
       {/* Button: Process Dataset */}
-      <section className="flex justify-center items-center border-4">
+      <section className="flex justify-center items-center">
           <button 
-            onClick={() => router.push("/preprocessing/demo")} 
+            onClick={() => router.push("/preprocessing/results")} 
             className="bg-blueText text-beige text-lg font-semibold px-8 py-3 rounded-md shadow-md 
             hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
             transition duration-300 ease-in-out">
