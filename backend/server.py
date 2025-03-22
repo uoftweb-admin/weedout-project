@@ -1,206 +1,86 @@
-import io
-import zipfile
-import os
-from flask import Flask, render_template, redirect, url_for, session, send_file, after_this_request
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, SubmitField, RadioField
-from wtforms.validators import DataRequired, InputRequired, Length
-from flask_bootstrap import Bootstrap
+from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 import pandas as pd
-from io import BytesIO
-from contextlib import redirect_stdout
+import os
+import json
 from weedout import preprocess
-import tempfile
-
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'  
-Bootstrap(app)
+CORS(app)
 
-def make_array(string: str):
-    return [i.strip() for i in string.split(',')]
+UPLOAD_FOLDER = "temp"
+PROCESSED_FOLDER = "processed"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
-class NameForm(FlaskForm):
+@app.route("/", methods=["GET"])
+def return_home():
+    return jsonify({"message": "it works!" })
 
-    data_type = RadioField('Dataset Type', choices=[('0', 'Cross-Sectional Data'), ('1', 'Time Series Data')], validators=[DataRequired()])
+@app.route("/process", methods=["POST"])
+def process_file():
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
-    model_type = RadioField('Model Type for which the data is being trained on', choices=[('0','Regression'),('1','Classification')], validators=[DataRequired()])
+    file = request.files["file"]
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
 
-    sampling_response = RadioField('Should we perform sampling if needed? (Read Note before selecting options)', choices=[('1','Yes'),('0','No')], validators=[DataRequired()])
-
-    strategy_sample = RadioField('What kind of sampling should we perform?', 
-                                 choices=[('smote','smote'),
-                                          ('undersampling','undersampling'), 
-                                          ('oversampling','oversampling'), 
-                                          ('no sampling','no sampling')], validators=[DataRequired()])
-    
-    target_name  = StringField('Name of the Target Column', validators=[InputRequired(), Length(min=1, max=30)])
-
-    dropped_column = StringField('Name of the columns to drop from the dataset. (Seprate each column name with a comma)', validators=[Length(max=200)])
-
-    untouched_column = StringField('Name of the columns to not scale/encode in the dataset. (Seprate each column name with a comma)', validators=[Length(max=200)])
-
-    csv_file = FileField('Upload CSV File', validators=[FileAllowed(['csv'], 'CSV files only!')])
-
-    submit = SubmitField('Submit')
-
-
-@app.errorhandler(400)
-@app.errorhandler(500)
-def handle_error(error):
-    return render_template('error.html')
-
-@app.route('/', methods=['GET'])
-def landing():
-    return render_template('landing.html')
-
-@app.route('/about', methods =['GET'])
-def about():
-    return render_template('about.html')
-
-@app.route('/documentation', methods=['GET'])
-def documentation():
-    return render_template('documentation.html')
-
-@app.route('/preprocess', methods=['GET', 'POST'])
-def index():
-    form = NameForm()
-    if form.validate_on_submit():
-        if form.csv_file.data:
-            session['data_type'] = form.data_type.data
-            session['model_type'] = form.model_type.data
-            session['sampling_response'] = form.sampling_response.data
-            session['strategy_sample'] = form.strategy_sample.data
-            session['target_name'] = form.target_name.data
-            session['dropped_column'] = form.dropped_column.data
-            session['untouched_column'] = form.untouched_column.data
-            
-            # Read the CSV file and store its content as a string in the session
-            csv_content = form.csv_file.data.read().decode('utf-8')
-
-            if csv_content:
-                # Define the path to your temp folder
-                temp_folder_path = 'temp/'
-
-                # Ensure the temp folder exists
-                os.makedirs(temp_folder_path, exist_ok=True)
-
-                # Define the full path to the CSV file
-                csv_file_path = os.path.join(temp_folder_path, 'data.csv')
-
-                # Write the CSV content to the file
-                with open(csv_file_path, 'w') as csv_file:
-                    csv_file.write(csv_content)
-
-            return redirect(url_for('result'))
-        
-    return render_template('index.html', form=form)
-
-
-@app.route('/download_zip')
-def download_zip():
-    file_path = os.path.abspath('temp/data_final.csv')
-    if not os.path.exists(file_path):
-        return render_template('error.html', message="failed")
-
-    @after_this_request
-    def cleanup(response):
-        try:
-            os.remove('temp/data.csv')
-            os.remove('temp/data_final.csv')
-        except FileNotFoundError:
-            pass
-        return response
-    
-    memory_file = BytesIO()
-    
-    with zipfile.ZipFile(memory_file, 'w') as zf:
-        if os.path.exists('temp/data_final.csv'):
-            zf.write('temp/data_final.csv', 'data.csv')
-        else:
-            return render_template('error.html'), 404
-    
-    # Move to the beginning of the BytesIO object
-    memory_file.seek(0)
-
-    # Send the file for download
-    return send_file(
-        memory_file,
-        mimetype='application/zip',
-        as_attachment=True,
-        download_name='archive.zip'
-    )
-
-
-@app.route('/results', methods=['GET','POST'])
-def result():
+    # Retrieve preprocessing parameters from the request
+    target_column = request.form.get("target_column", "")
+    drop_columns = json.loads(request.form.get("drop_columns", "[]"))
+    untouched_columns = json.loads(request.form.get("untouched_columns", "[]"))
+    dataset_type = int(request.form.get("dataset_type", 0))
+    sampling = int(request.form.get("sampling", 0))
+    model_type = int(request.form.get("model_type", 1))
+    sampling_strategy = request.form.get("sampling_strategy", "smote")
 
     try:
-        df = pd.read_csv('temp/data.csv')
-        df_post = None
-        target_column = session.get('target_name')
-        dropped_columns = make_array(session.get('dropped_column'))
-        untouched_columns = make_array(session.get('untouched_column'))
-        type_dataset = int(session.get('data_type'))
-        sampling = int(session.get('sampling_response'))
-        classification = int(session.get('model_type'))
-        strategy_sample =session.get('strategy_sample')
-
-
-        buffer = io.StringIO()
-        with redirect_stdout(buffer):
-            df.info()
-        df_info = buffer.getvalue()
-
-        buffer_post = io.StringIO()
-        passed = False
-        with redirect_stdout(buffer_post):
-            try:
-                if strategy_sample != "no sampling":
-                    df_post = preprocess.preprocess_pipeline('temp/data.csv', target_column, dropped_columns, untouched_columns, type_dataset, sampling, classification, strategy_sample)
-                else:
-                    df_post = preprocess.preprocess_pipeline('temp/data.csv', target_column, dropped_columns, untouched_columns, type_dataset, sampling, classification)
-                passed = True
-            except Exception as e:
-                print(f'Error : {e}')
-
-        if passed: 
-            df_post_process = buffer_post.getvalue()
-            df_post.to_csv('temp/data_final.csv', index=False)
-
-            # Capture df_post.info() output
-            buffer_post_info = io.StringIO()
-            with redirect_stdout(buffer_post_info):
-                df_post.info()
-            df_post_info = buffer_post_info.getvalue()
-        
+        # Call preprocess_pipeline
+        if sampling_strategy != "No sampling":
+            processed_df = preprocess.preprocess_pipeline(
+                file_path=file_path,
+                target_column=target_column,
+                dropped_columns=drop_columns,
+                untouched_columns=untouched_columns,
+                type_dataset=dataset_type,
+                sampling=sampling,
+                classfication=model_type
+            )
         else:
-            df_post_process = buffer_post.getvalue()
+            processed_df = preprocess.preprocess_pipeline(
+            file_path=file_path,
+            target_column=target_column,
+            dropped_columns=drop_columns,
+            untouched_columns=untouched_columns,
+            type_dataset=dataset_type,
+            sampling=sampling,
+            classfication=model_type,
+            strategy_sample=sampling_strategy,
+        )
+        processed_filename = "processed_" + file.filename
+        processed_file_path = os.path.join(PROCESSED_FOLDER, processed_filename)
+        processed_df.to_csv(processed_file_path, index=False)
+        return jsonify({"message": "File processed successfully", "filename": processed_filename}), 200
 
-            df_post = pd.DataFrame()
-            df_post.to_csv('temp/data_final.csv', index=False)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-            df_post_info = False
+    # Save processed file
+    processed_filename = "processed_" + file.filename
+    processed_file_path = os.path.join(PROCESSED_FOLDER, processed_filename)
+    processed_df.to_csv(processed_file_path, index=False)
 
+    return jsonify({"message": "File processed successfully", "filename": processed_filename}), 200
 
-        return render_template('result.html', 
-                            data_type=session.get('data_type'), 
-                            strategy_sample = session.get('strategy_sample'),
-                            model_type = session.get('model_type'),
-                            sampling_response=session.get('sampling_response'),
-                            target_name = session.get('target_name'),
-                            dropped_column = dropped_columns,
-                            csv_content=df_info,
-                            csv_content_process=df_post_process,
-                            csv_content_post = df_post_info)
-    
-    except FileNotFoundError:
-        return render_template('error.html'), 500
+@app.route("/download/<filename>", methods=["GET"])
+def download_file(filename):
+    file_path = os.path.join(PROCESSED_FOLDER, filename)
+    if not os.path.exists(file_path):
+        return jsonify({"error": "File not found"}), 404
 
+    return send_file(file_path, as_attachment=True)
 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5001, debug=True)
 
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=True, host='0.0.0.0', port=port)

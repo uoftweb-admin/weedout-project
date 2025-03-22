@@ -1,274 +1,407 @@
 "use client"
-import React from 'react'
-import { useRouter } from "next/navigation";
-import { GoArrowLeft } from "react-icons/go";
-import { Inria_Serif } from '@next/font/google';
-import { useState } from "react";
-import { CloudUpload, Trash2 } from "lucide-react";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Inria_Serif } from "@next/font/google"
+import { CloudUpload, Trash2, ArrowLeft, Database, Settings, FileType, Columns } from "lucide-react"
+import axios from "axios";
 
 const inriaSerif = Inria_Serif({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-});
+  subsets: ["latin"],
+  weight: ["400", "700"],
+})
 
-export default function page() {
+export default function PreprocessingConfig() {
+  const router = useRouter();
+  const [file, setFile] = useState(null);
+  const [targetColumn, setTargetColumn] = useState("");
+  const [columnsToDrop, setColumnsToDrop] = useState("");
+  const [untouchedColumns, setUntouchedColumns] = useState("");
+  const [datasetType, setDatasetType] = useState("");
+  const [modelType, setModelType] = useState("");
+  const [samplingStrategy, setSamplingStrategy] = useState("Select Sampling");
 
-    const router = useRouter();
 
-    const [file, setFile] = useState(null);
-
-    const handleFileChange = async (event) => {
-      // if (event.target.files.length > 0) {
-      //   setFile(event.target.files[0]);
-      // }
+  const handleFileChange = (event) => {
+    if (event.target.files.length > 0) {
       const selectedFile = event.target.files[0];
-      if (selectedFile) {
-        await saveFile(selectedFile);
+      if (selectedFile && selectedFile.type === "text/csv") {
+        setFile(selectedFile);
+      } else {
+        alert("Invalid file type! Please upload a CSV file.");
       }
-    };
-  
-    const handleDrop = async (event) => {
-      event.preventDefault();
-      const droppedFile = event.dataTransfer.files[0];
-      if (droppedFile) {
-        await saveFile(droppedFile);
-      }
-    };
-  
-    const handleDelete = () => {
-      setFile(null);
-    };
+    }
+  }
 
-    const saveFile = async (selectedFile) => {
-      // Create a FormData object to send the file to an API route
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-  
-      try {
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-    
-        const data = await response.json();
-    
-        if (!response.ok) {
-          throw new Error(data.error || "Unknown upload error");
-        }
-    
-        console.log("Upload Success:", data);
-        setFile({ name: "file.csv", size: selectedFile.size }); // Store an object
-        // setFile(data.fileName);
-      } catch (error) {
-        console.error("File upload failed:", error.message);
-      }
-    };
+  const handleDrop = (event) => {
+    event.preventDefault()
+    const droppedFile = event.dataTransfer.files[0]
+    if (droppedFile && droppedFile.type === "text/csv") {
+      setFile(droppedFile);
+    } else {
+      alert("Invalid file type! Please upload a CSV file.");
+    }
+  }
 
-    const handleProcessDataset = () => {
-      if (file) {
-        router.push(`/preprocessing/results?file=${file}`);
-      }
-    };
+  const handleDelete = () => {
+    setFile(null)
+  }
+
+  const handleProcessDataset = async (event) => {
+    event.preventDefault();
+  
+    if (!file) {
+      alert("Please upload a CSV file.");
+      return;
+    }
+  
+    // Basic validation
+    if (!targetColumn) {
+      alert("Please enter a target column name.");
+      return;
+    }
+  
+    if (!datasetType) {
+      alert("Please select a dataset type.");
+      return;
+    }
+  
+    if (!modelType) {
+      alert("Please select a model type.");
+      return;
+    }
+  
+    // Convert values to match backend expectations
+    // Convert datasetType to integer (0 for cross-sectional, 1 for time-series)
+    const datasetTypeInt = datasetType === "cross-sectional" ? 0 : 1;
+    
+    // Convert modelType to integer (1 for classification, 0 for regression)
+    const modelTypeInt = modelType === "classification" ? 1 : 0;
+    
+    // Map sampling strategy to integer
+    let samplingInt = 0; // Default: no sampling
+    if (samplingStrategy === "undersampling") samplingInt = 1;
+    else if (samplingStrategy === "oversampling") samplingInt = 2;
+    else if (samplingStrategy === "smote") samplingInt = 3;
+  
+    // Convert column inputs into arrays
+    const dropColumnsArray = columnsToDrop.split(",").map((col) => col.trim()).filter(col => col !== "");
+    const untouchedColumnsArray = untouchedColumns.split(",").map((col) => col.trim()).filter(col => col !== "");
+  
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("target_column", targetColumn);
+    formData.append("drop_columns", JSON.stringify(dropColumnsArray));
+    formData.append("untouched_columns", JSON.stringify(untouchedColumnsArray)); 
+    formData.append("dataset_type", datasetTypeInt);
+    formData.append("model_type", modelTypeInt);
+    formData.append("sampling", samplingInt);
+    formData.append("sampling_strategy", samplingStrategy);
+  
+    try {
+      const response = await axios.post("http://localhost:5001/process", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+  
+      const filename = response.data.filename;
+      console.log("Backend responded with filename:", filename);
+  
+      router.push(`/preprocessing/results?file=${filename}`);
+    } catch (err) {
+      console.error("Processing failed:", err);
+      alert("Something went wrong while processing the file: " + (err.response?.data?.error || err.message));
+    }
+  };
 
   return (
-    <div className={`${inriaSerif.className}`}>
-
-      {/* Back Arrow to return to Demo Description Page */}
-        <button
+    <div className={`bg-customGreen w-full min-h-screen ${inriaSerif.className}`}>
+      <div className="max-w-7xl mx-auto">
+        {/* Back button */}
+        <div className="pt-6 px-4 sm:px-10 lg:px-20">
+          <button
             onClick={() => router.push("/preprocessing")}
-            className="flex items-center text-blueText hover:text-infoBoxes transition duration-300 ease-in-out"
-            >
-            <GoArrowLeft className="text-4xl scale-x-125 inherit" />
-        </button>
+            className="flex items-center text-beige hover:text-infoBoxes transition duration-300 ease-in-out group"
+          >
+            <ArrowLeft className="mr-2" />
+            <span className="group-hover:underline">Back to Demo</span>
+          </button>
+        </div>
 
-      {/* Title section */}
-        <section className=" lg:pt-6 px-4 sm:px-10 lg:px-20 mb-10">
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-infoBoxes">Data-Preprocessing Configuration</h3>
-          <h4 className="text-sm sm:text-base lg:text-lg text-center pt-6 text-beige">
+        {/* Header */}
+        <section className="pt-8 lg:pt-12 px-4 sm:px-10 lg:px-20">
+          <div className="relative inline-block">
+          <h1 className="text-beige text-4xl sm:text-4xl lg:text-5xl font-bold">Data Preprocessing</h1>
+            <div className="absolute -bottom-3 left-0 w-full h-1 bg-infoBoxes rounded-full"></div>
+          </div>
+
+          <p className="text-beige mt-8 text-lg opacity-90 max-w-3xl">
             Please answer the following questions to clean and prepare your dataset.
-          </h4>
+          </p>
         </section>
 
-      {/* Upload Dataset section */}
-      <section className=" lg:pt-6 px-4 sm:px-10 lg:px-20">
-          <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md ">
-          <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
-            Dataset Upload
-          </h2>
+        <form onSubmit={handleProcessDataset} method="POST" encType="multipart/form-data">
 
-          <div
-            className="border-dashed border-2 border-gray-300 rounded-lg p-6 text-center"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-          >
-            {!file ? (
-              <>
-                <CloudUpload size={40} className="mx-auto text-[#1a365d]" />
-                <p className="text-blueText mt-2">
-                  Drag and drop your CSV file here or:
-                </p>
-                <label className="mt-4 inline-block bg-blueText text-beige px-4 py-2 rounded-md cursor-pointer shadow-md 
-                  hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
-                  transition duration-300 ease-in-out">
-                  Browse Files
-                  <input
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
+        {/* Upload Dataset section */}
+
+        <section className="mt-12 px-4 sm:px-10 lg:px-20">
+          <div className="relative inline-flex items-center mb-6">
+            <CloudUpload className="text-infoBoxes mr-3" size={28} />
+            <h2 className="text-beige text-2xl sm:text-3xl font-bold">Dataset Upload</h2>
+            <div className="absolute -bottom-2 left-0 w-full h-1 bg-infoBoxes/50 rounded-full"></div>
+          </div>
+
+          <div className="bg-beige rounded-xl p-6 shadow-lg transform transition-all duration-300 hover:shadow-xl">
+            <div
+              className="border-dashed border-2 border-blueText/40 rounded-lg p-8 text-center transition-all duration-300 hover:border-blueText"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+            >
+              {!file ? (
+                <>
+                  <CloudUpload size={60} className="mx-auto text-blueText opacity-70" />
+                  <p className="text-blueText mt-4 text-lg">Drag and drop your CSV file here or:</p>
+                  <label
+                    className="mt-6 inline-block bg-blueText text-beige px-6 py-3 rounded-full cursor-pointer shadow-md 
+                    hover:bg-gradient-to-r hover:from-blueText hover:to-customGreen
+                    hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out"
+                  >
+                    Browse Files
+                    <input type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
+                  </label>
+                </>
+              ) : (
+                <div className="flex items-center justify-between p-4 bg-infoBoxes/20 border border-infoBoxes/40 rounded-lg">
+                  <div className="flex items-center">
+                    <Database className="text-blueText mr-3" />
+                    <p className="text-blueText font-medium">{file.name}</p>
+                  </div>
+                  <button
+                    className="bg-red-100 p-2 rounded-full text-red-600 hover:bg-red-200 hover:text-red-700 transition-colors duration-300"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Dataset and Model Type Questions */}
+        <section className="mt-12 px-4 sm:px-10 lg:px-20">
+          <div className="relative inline-flex items-center mb-6">
+            <Settings className="text-infoBoxes mr-3" size={28} />
+            <h2 className="text-beige text-2xl sm:text-3xl font-bold">Dataset and Model Type</h2>
+            <div className="absolute -bottom-2 left-0 w-full h-1 bg-infoBoxes/50 rounded-full"></div>
+          </div>
+
+          <div className="bg-beige rounded-xl p-6 shadow-lg transform transition-all duration-300 hover:shadow-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="group">
+                <label className="block text-blueText font-medium mb-2 group-hover:text-customGreen transition-colors duration-300">
+                  Model Type
                 </label>
-              </>
-            ) : (
-              <div className="flex items-center justify-between p-3 bg-gray-100 border border-gray-300 rounded-md">
-                {/* <p className="text-blueText">{file.name}</p> */}
-                <p className="text-blueText">
-                  {file ? file.name : "No file uploaded"}
-                </p>
-                <button
-                  className="text-red-500 hover:text-red-700"
-                  onClick={handleDelete}
-                >
-                  <Trash2 size={20} />
-                </button>
+                <div className="relative">
+                  <select
+                    value={modelType}
+                    onChange={(e) => setModelType(e.target.value)}
+                    className="block w-full text-beige p-3 bg-customGreen border-2 border-infoBoxes/50 rounded-lg focus:outline-none focus:border-infoBoxes focus:ring-1 focus:ring-infoBoxes transition-all duration-300 appearance-none shadow-md"
+                  >
+                    <option value="">Select Model Type</option>
+                    <option value="regression">Regression</option>
+                    <option value="classification">Classification</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                    <div className="w-6 h-6 rounded-full bg-infoBoxes flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blueText" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
 
-      </section>
-
-      {/* Dataset and Model Type Questions */}
-      <section className=" lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
-        
-        <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md">
-        <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
-        Dataset and Model Type
-      </h2>
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-blueText">
-            Model Type
-          </label>
-          <select className="mt-1 block w-full text-customGreen p-2 border border-blueText rounded-md bg-white focus:outline-none focus:ring-blue-500 focus:border-customGreen">
-            <option>Select Model Type</option>
-            <option>Regression</option>
-            <option>Classification</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-blueText">
-            Sampling Technique
-          </label>
-          <select className="mt-1 text-customGreen block w-full p-2 border border-blueText rounded-md bg-white focus:outline-none focus:ring-blue-500 focus:border-customGreen">
-            <option>Select Sampling</option>
-            <option>Undersampling</option>
-            <option>Oversampling</option>
-            <option>Smote</option>
-            <option>No sampling</option>
-          </select>
-        </div>
-      </div>
-
-        </div>
-
-      </section>
-
-      {/* Dataset Type Question */}
-      <section  className="lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
-      
-        <div className="w-full max-w-4xl mx-auto p-4 bg-beige shadow-md">
-          <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
-            Dataset Type
-          </h2>
-
-          <div className="flex space-x-6 items-center">
-            <label className="flex items-center text-blueText">
-              <input type="radio" name="datasetType" value="cross-sectional" className="mr-2" />
-              Cross-sectional
-            </label>
-            <label className="flex items-center text-blueText">
-              <input type="radio" name="datasetType" value="time-series" className="mr-2" />
-              Time Series
-            </label>
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* Columns Configuration */}
-      <section className=" lg:pt-14 sm:pt-14 px-4 sm:px-10 lg:px-20">
-        <div className="w-full max-w-4xl mx-auto p-6 bg-beige shadow-md mb-8">
-          <h2 className="text-blueText font-bold text-1xl sm:text-1xl lg:text-2xl mb-4">
-            Column Configuration
-          </h2>
-          <div className="space-y-4">
-            {/* Target Column */}
-            <div>
-              <label className="block text-sm font-medium text-blueText">
-                Target Column
-              </label>
-              <input
-                type="text"
-                placeholder="Enter target column name"
-                className="mt-1 block w-full p-2 border text-customGreen border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            {/* Columns to Drop */}
-            <div>
-              <label className="block text-sm font-medium text-blueText">
-                Columns to Drop
-              </label>
-              <input
-                type="text"
-                placeholder="Enter column names separated by comma"
-                className="mt-1 block text-customGreen w-full p-2 border border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            {/* ID Columns */}
-            <div>
-              <label className="block text-sm font-medium text-blueText">
-                ID Columns
-              </label>
-              <input
-                type="text"
-                placeholder="Enter ID column names"
-                className="mt-1 block w-full p-2 border border-blueText rounded-md focus:outline-none text-customGreen focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            {/* Columns to Not Scale/Encode */}
-            <div>
-              <label className="block text-sm font-medium text-blueText">
-                Columns to Not Scale/Encode
-              </label>
-              <input
-                type="text"
-                placeholder="Enter column names separated by comma"
-                className="mt-1 block w-full p-2 border text-customGreen border-blueText rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="group">
+                <label className="block text-blueText font-medium mb-2 group-hover:text-customGreen transition-colors duration-300">
+                  Sampling Technique
+                </label>
+                <div className="relative">
+                  <select
+                    value={samplingStrategy}
+                    onChange={(e) => setSamplingStrategy(e.target.value)}
+                    className="block w-full text-beige p-3 bg-customGreen border-2 border-infoBoxes/50 rounded-lg focus:outline-none focus:border-infoBoxes focus:ring-1 focus:ring-infoBoxes transition-all duration-300 appearance-none shadow-md"
+                  >
+                    <option value="">Select Sampling</option>
+                    <option value="undersampling">Undersampling</option>
+                    <option value="oversampling">Oversampling</option>
+                    <option value="smote">SMOTE</option>
+                    <option value="none">No sampling</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                    <div className="w-6 h-6 rounded-full bg-infoBoxes flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blueText" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Button: Process Dataset */}
-      <section className="flex justify-center items-center">
-          <button 
-            onClick={() => router.push("/preprocessing/results")} 
-            className="bg-blueText text-beige text-lg font-semibold px-8 py-3 rounded-md shadow-md 
-            hover:shadow-2xl hover:bg-gradient-to-r hover:from-infoBoxes hover:to-blueText
-            transition duration-300 ease-in-out">
-                Process Dataset
+        {/* Dataset Type Question */}
+        <section className="mt-12 px-4 sm:px-10 lg:px-20">
+          <div className="relative inline-flex items-center mb-6">
+            <FileType className="text-infoBoxes mr-3" size={28} />
+            <h2 className="text-beige text-2xl sm:text-3xl font-bold">Dataset Type</h2>
+            <div className="absolute -bottom-2 left-0 w-full h-1 bg-infoBoxes/50 rounded-full"></div>
+          </div>
+
+          <div className="bg-beige rounded-xl p-6 shadow-lg transform transition-all duration-300 hover:shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:space-x-8">
+              <label
+                className={`flex items-center p-4 border-2 rounded-lg cursor-pointer mb-4 sm:mb-0 transition-all duration-300 ${datasetType === "cross-sectional" ? "border-customGreen bg-infoBoxes/20" : "border-blueText/30 hover:border-customGreen hover:bg-infoBoxes/10"}`}
+              >
+                <input
+                  type="radio"
+                  name="datasetType"
+                  value="cross-sectional"
+                  checked={datasetType === "cross-sectional"}
+                  onChange={() => setDatasetType("cross-sectional")}
+                  className="hidden"
+                />
+                <div
+                  className={`w-6 h-6 mr-3 border-2 rounded-full flex items-center justify-center transition-colors duration-300 ${datasetType === "cross-sectional" ? "border-customGreen" : "border-blueText"}`}
+                >
+                  {datasetType === "cross-sectional" && <div className="w-3 h-3 bg-customGreen rounded-full"></div>}
+                </div>
+                <span
+                  className={`font-medium transition-colors duration-300 ${datasetType === "cross-sectional" ? "text-customGreen" : "text-blueText"}`}
+                >
+                  Cross-sectional
+                </span>
+              </label>
+
+              <label
+                className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 ${datasetType === "time-series" ? "border-customGreen bg-infoBoxes/20" : "border-blueText/30 hover:border-customGreen hover:bg-infoBoxes/10"}`}
+              >
+                <input
+                  type="radio"
+                  name="datasetType"
+                  value="time-series"
+                  checked={datasetType === "time-series"}
+                  onChange={() => setDatasetType("time-series")}
+                  className="hidden"
+                />
+                <div
+                  className={`w-6 h-6 mr-3 border-2 rounded-full flex items-center justify-center transition-colors duration-300 ${datasetType === "time-series" ? "border-customGreen" : "border-blueText"}`}
+                >
+                  {datasetType === "time-series" && <div className="w-3 h-3 bg-customGreen rounded-full"></div>}
+                </div>
+                <span
+                  className={`font-medium transition-colors duration-300 ${datasetType === "time-series" ? "text-customGreen" : "text-blueText"}`}
+                >
+                  Time Series
+                </span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        {/* Columns Configuration */}
+        <section className="mt-12 px-4 sm:px-10 lg:px-20">
+          <div className="relative inline-flex items-center mb-6">
+            <Columns className="text-infoBoxes mr-3" size={28} />
+            <h2 className="text-beige text-2xl sm:text-3xl font-bold">Column Configuration</h2>
+            <div className="absolute -bottom-2 left-0 w-full h-1 bg-infoBoxes/50 rounded-full"></div>
+          </div>
+
+          <div className="bg-beige rounded-xl p-6 shadow-lg transform transition-all duration-300 hover:shadow-xl">
+            <div className="space-y-6">
+              {/* Target Column */}
+              <div className="group">
+                <label className="block text-blueText font-medium mb-2 group-hover:text-customGreen transition-colors duration-300">
+                  Target Column
+                </label>
+                <input
+                  type="text"
+                  value={targetColumn}
+                  onChange={(e) => setTargetColumn(e.target.value)}
+                  placeholder="Enter target column name"
+                  className={`block w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-1 transition-all duration-300 ${
+                    targetColumn
+                      ? "bg-customGreen text-beige border-infoBoxes focus:border-infoBoxes focus:ring-infoBoxes placeholder-beige/50"
+                      : "text-blueText border-blueText/30 focus:border-customGreen focus:ring-customGreen"
+                  }`}
+                />
+                <p className="mt-1 text-sm text-blueText/70">The column you want to predict</p>
+              </div>
+
+              {/* Columns to Drop */}
+              <div className="group">
+                <label className="block text-blueText font-medium mb-2 group-hover:text-customGreen transition-colors duration-300">
+                  Columns to Drop
+                </label>
+                <input
+                  type="text"
+                  value={columnsToDrop}
+                  onChange={(e) => setColumnsToDrop(e.target.value)}
+                  placeholder="Enter column names separated by comma"
+                  className={`block w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-1 transition-all duration-300 ${
+                    columnsToDrop
+                      ? "bg-customGreen text-beige border-infoBoxes focus:border-infoBoxes focus:ring-infoBoxes placeholder-beige/50"
+                      : "text-blueText border-blueText/30 focus:border-customGreen focus:ring-customGreen"
+                  }`}
+                />
+                <p className="mt-1 text-sm text-blueText/70">Columns that should be excluded from the analysis</p>
+              </div>
+
+              
+
+              {/* Columns to Not Scale/Encode */}
+              <div className="group">
+                <label className="block text-blueText font-medium mb-2 group-hover:text-customGreen transition-colors duration-300">
+                  Columns to Not Scale/Encode
+                </label>
+                <input
+                  type="text"
+                  value={untouchedColumns}
+                  onChange={(e) => setUntouchedColumns(e.target.value)}
+                  placeholder="Enter column names separated by comma"
+                  className={`block w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-1 transition-all duration-300 ${
+                    untouchedColumns
+                      ? "bg-customGreen text-beige border-infoBoxes focus:border-infoBoxes focus:ring-infoBoxes placeholder-beige/50"
+                      : "text-blueText border-blueText/30 focus:border-customGreen focus:ring-customGreen"
+                  }`}
+                />
+                <p className="mt-1 text-sm text-blueText/70">Columns that should be kept in their original form</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+       {/* Process Dataset Button */}
+        <section className="mt-12 mb-20 px-4 sm:px-10 lg:px-20 flex justify-center">
+          <button
+            type="submit"
+            className="bg-blueText text-beige text-lg font-semibold px-10 py-4 rounded-full shadow-lg 
+            hover:bg-gradient-to-r hover:from-blueText hover:to-customGreen
+            hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out"
+          >
+            Process Dataset
           </button>
-      </section>
-
-        
+        </section>
+        </form>
+      </div>
     </div>
   )
 }
-
 

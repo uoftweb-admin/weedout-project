@@ -3,12 +3,16 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { GoArrowLeft } from "react-icons/go";
 import Papa from "papaparse";
+import { useSearchParams } from "next/navigation";
 
 // Example: we want 10 bins for numeric columns
 const NUM_BINS = 10;
 
 export default function ProcessingResultsPage() {
   const router = useRouter();
+
+  const searchParams = useSearchParams();
+  const filename = searchParams.get("file");
 
   // Column definitions & user selections
   const [columns, setColumns] = useState([]);
@@ -360,8 +364,12 @@ export default function ProcessingResultsPage() {
     );
   }
 
+  console.log("Filename from URL:", filename);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#007057] to-emerald-900">
+
+
       {/* Header */}
       <div className="pt-8 pb-6 px-6">
         <div className="max-w-7xl mx-auto">
@@ -375,9 +383,17 @@ export default function ProcessingResultsPage() {
               </button>
               <h1 className="text-4xl font-bold text-beige">Processing Results</h1>
             </div>
-            <button className="px-6 py-2.5 bg-beige text-emerald-900 rounded-lg font-medium hover:bg-emerald-50 transition-all duration-200">
-              Download CSV
-            </button>
+            {filename ? (
+        <a
+          href={`http://localhost:5001/download/${filename}`}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+          download
+        >
+          Download Processed File
+        </a>
+      ) : (
+        <p>No processed file available.</p>
+      )}
           </div>
         </div>
       </div>
