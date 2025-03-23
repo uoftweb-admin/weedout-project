@@ -2,7 +2,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Inria_Serif } from "@next/font/google"
-import { CloudUpload, Trash2, ArrowLeft, Database, Settings, FileType, Columns } from "lucide-react"
+import { CloudUpload, Trash2, Database, Settings, FileType, Columns } from "lucide-react"
+import { GoArrowLeft } from "react-icons/go";
 import axios from "axios";
 
 const inriaSerif = Inria_Serif({
@@ -119,10 +120,9 @@ export default function PreprocessingConfig() {
         <div className="pt-6 px-4 sm:px-10 lg:px-20">
           <button
             onClick={() => router.push("/preprocessing")}
-            className="flex items-center text-beige hover:text-infoBoxes transition duration-300 ease-in-out group"
+            className="flex items-center text-beige hover:text-emerald-300 transition duration-300"
           >
-            <ArrowLeft className="mr-2" />
-            <span className="group-hover:underline">Back to Demo</span>
+            <GoArrowLeft className="text-3xl" />
           </button>
         </div>
 

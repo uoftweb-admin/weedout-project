@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, after_this_request
 from flask_cors import CORS
 import pandas as pd
 import os
@@ -61,23 +61,34 @@ def process_file():
         processed_filename = "processed_" + file.filename
         processed_file_path = os.path.join(PROCESSED_FOLDER, processed_filename)
         processed_df.to_csv(processed_file_path, index=False)
+
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                print(f"Deleted original uploaded file: {file_path}")
+            except Exception as e:
+                print(f"Error deleting uploaded file: {e}")
+
         return jsonify({"message": "File processed successfully", "filename": processed_filename}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    # Save processed file
-    processed_filename = "processed_" + file.filename
-    processed_file_path = os.path.join(PROCESSED_FOLDER, processed_filename)
-    processed_df.to_csv(processed_file_path, index=False)
-
-    return jsonify({"message": "File processed successfully", "filename": processed_filename}), 200
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):
     file_path = os.path.join(PROCESSED_FOLDER, filename)
     if not os.path.exists(file_path):
         return jsonify({"error": "File not found"}), 404
+    
+    # @after_this_request
+    # def remove_file(response):
+    #     try:
+    #         os.remove(file_path)
+    #         print(f"Deleted processed file: {file_path}")
+    #     except Exception as e:
+    #         print(f"Error deleting files: {e}")
+    #     return response
 
     return send_file(file_path, as_attachment=True)
 
