@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {BLUE, GREEN, WHITE} from "../colors.js";
 import Sidebar from "../Sidebar.js";
@@ -70,6 +70,12 @@ export default function APIReferencePage() {
 
   const { sidebarOpen, setSidebarOpen } = useUI();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  useEffect(() => {
+    if (!isMobile && !sidebarOpen) {
+      setSidebarOpen(true);
+    }
+  }, [isMobile, sidebarOpen, setSidebarOpen]);
+  
 
   // For auto-closing sidebar when user selects an item on mobile
   const handleItemClick = (content) => {
@@ -82,10 +88,20 @@ export default function APIReferencePage() {
   return (
     <div className={`min-h-screen flex bg-customGreen ${inriaSerif.className}`}>
       {/* side bar */}
+      {isMobile && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="fixed top-28 left-2 bg-beige text-customGreen p-2 rounded shadow-md md:hidden"
+            aria-label="Open sidebar"
+          >
+            ☰
+          </button>
+        )}
       <div 
         className={`fixed md:relative z-50 
         md:translate-x-0 transition-transform duration-300
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
       >
         <Sidebar
             items={sidebarItems}
@@ -95,10 +111,11 @@ export default function APIReferencePage() {
             onToggle={toggleSection}
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
+            isMobile={isMobile}
         />
       </div>
 
-      {/* main ared */}
+      {/* main area */}
       {isMobile && sidebarOpen && (
         <div
           className={`fixed inset-0 bg-black/50 z-40 ${inriaSerif.className}`}

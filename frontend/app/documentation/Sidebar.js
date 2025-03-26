@@ -11,11 +11,12 @@ export default function Sidebar({
   onItemClick,
   onToggle,
   sidebarOpen,
+  isMobile
 }) {
   return (
     <div
       className={`
-        fixed top-0.5 left-0 w-64 bg-beige min-h-screen p-4 overflow-y-auto
+        fixed top-0.5 left-0 w-64 bg-beige min-h-screen p-4 ${isMobile ? 'pt-16' : ''} overflow-y-auto
         transform transition-transform duration-300 z-[40] 
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}

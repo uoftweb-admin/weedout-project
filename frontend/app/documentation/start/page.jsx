@@ -423,7 +423,7 @@ print("Cleaned dataset saved as 'BCD_cleaned.csv'")
 
                   <div className="bg-white p-5 rounded-lg shadow-md">
                     <h3 className="text-blueText text-xl font-bold mb-3">Step 3: Process Columns</h3>
-                    <p className="text-blueText mb-3">Separate, encode, and scale the features for machine learning:</p>
+                    <p className="text-blueText mb-3">Separate, encode, and scale the features for machine learning using the following functions:</p>
                     <div className="space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-center">
                         <span className="font-mono text-customGreen font-bold w-48 flex-shrink-0">
