@@ -111,7 +111,6 @@ export default function APIReferencePage() {
             onToggle={toggleSection}
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
-            isMobile={isMobile}
         />
       </div>
 
