@@ -26,7 +26,7 @@ const teamData = [
         position: "Software Developer",
         linkedin: "https://www.linkedin.com/in/ericjialuochen/",
         github: "https://github.com/chenj926",
-        image: ""
+        image: "/images/jialuo-chen.jpg"
       },
       
       {
