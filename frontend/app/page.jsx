@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Inria_Serif } from "@next/font/google";
 
 const inriaSerif = Inria_Serif({
@@ -28,13 +29,15 @@ export default function Home() {
               </div>
 
               <div className="flex flex-wrap gap-4">
-                <button
-                  className="px-8 py-3 bg-beige text-emerald-900 rounded-lg font-medium
-                  hover:bg-emerald-50 active:bg-emerald-100 transform hover:-translate-y-0.5
-                  transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
-                >
-                  Try it out
-                </button>
+                <Link href="/preprocessing">
+                  <button
+                    className="px-8 py-3 bg-beige text-emerald-900 rounded-lg font-medium
+                    hover:bg-emerald-50 active:bg-emerald-100 transform hover:-translate-y-0.5
+                    transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
+                  >
+                    Try it out
+                  </button>
+                </Link>
                 <a
                   href="https://github.com/rohannair2022/weedout"
                   target="_blank"
@@ -48,22 +51,38 @@ export default function Home() {
                 </a>
               </div>
 
-              <div
-                className="group bg-black/20 backdrop-blur-sm rounded-xl p-4 inline-flex
-                items-center space-x-4 hover:bg-black/30 transition-all duration-200
-                cursor-pointer transform hover:-translate-y-0.5"
-              >
-                <Image
-                  src="/python_logo_processed.png"
-                  alt="Python Logo"
-                  width={24}
-                  height={24}
-                  className="group-hover:scale-110 transition-transform duration-200"
-                />
-                <code className="text-beige font-mono">
-                  pip install weedout
-                </code>
-              </div>
+              <Link href="/our-team">
+                <div
+                  className="group bg-black/20 backdrop-blur-sm rounded-xl p-4
+                  hover:bg-black/30 transition-all duration-200
+                  cursor-pointer transform hover:-translate-y-0.5"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <div className="absolute -inset-1 bg-emerald-500/20 rounded-full blur-sm group-hover:bg-emerald-500/30 transition-all duration-300"></div>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative text-emerald-300 group-hover:scale-110 transition-transform duration-200">
+                        <path d="M18 21a8 8 0 0 0-16 0"></path>
+                        <circle cx="10" cy="8" r="5"></circle>
+                        <path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"></path>
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-beige font-medium text-sm md:text-base">
+                        Meet Our Team
+                      </div>
+                      <div className="mt-1 text-beige/60 text-xs group-hover:text-beige/80 transition-colors duration-200">
+                        UofT WebDev Club Members
+                      </div>
+                    </div>
+                    <div className="text-emerald-300 group-hover:text-emerald-200 transition-colors duration-200">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform duration-200">
+                        <path d="M5 12h14"></path>
+                        <path d="m12 5 7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             </div>
 
             <div className="relative flex justify-center lg:justify-end">
