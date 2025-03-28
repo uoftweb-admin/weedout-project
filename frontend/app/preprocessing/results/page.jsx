@@ -7,6 +7,10 @@ import { useSearchParams } from "next/navigation";
 
 // Example: we want 10 bins for numeric columns
 const NUM_BINS = 10;
+// Max columns to display in preview
+const MAX_PREVIEW_COLUMNS = 8;
+// Max file size to process on client (1MB)
+const MAX_CLIENT_PROCESS_SIZE_MB = 1;
 
 export default function ProcessingResultsPage() {
   const router = useRouter();
@@ -16,6 +20,7 @@ export default function ProcessingResultsPage() {
 
   // Column definitions & user selections
   const [columns, setColumns] = useState([]);
+  const [displayColumns, setDisplayColumns] = useState([]);
   const [columnTypes, setColumnTypes] = useState({});   // { colName: "numeric" | "string" }
   const [columnNulls, setColumnNulls] = useState({});   // { colName: number_of_nulls }
   const [selectedColumn, setSelectedColumn] = useState("");
@@ -24,36 +29,60 @@ export default function ProcessingResultsPage() {
   const [beforeBins, setBeforeBins] = useState({});     // { colName: { bins: [...], counts: [...] } }
   const [afterBins, setAfterBins] = useState({});       // same structure
 
-  // Data for preview (we’ll show after-data in the table)
+  // Data for preview (we'll show after-data in the table)
   const [previewRows, setPreviewRows] = useState([]);
+  
+  // File information
+  const [fileSizeWarning, setFileSizeWarning] = useState(false);
+  const [originalFileSize, setOriginalFileSize] = useState(0);
+  const [processedFileSize, setProcessedFileSize] = useState(0);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [stats, setStats] = useState({});
-
-  // // For “Stats Overview” (just an example)
-  // const stats = {
-  //   originalRows: 1000,
-  //   cleanedRows: 982,
-  //   nullsFilled: 18,
-  //   duplicatesRemoved: 0,
-  // };
+  const [advancedStats, setAdvancedStats] = useState({});
 
   /**
    * 1) FETCH CSV + PARSE
    */
   useEffect(() => {
     const fetchCSVData = async (fileName) => {
-      const response = await fetch(`/files/${fileName}`);
-      const csvText = await response.text();
-      return new Promise((resolve) => {
-        Papa.parse(csvText, {
-          header: true,
-          dynamicTyping: true,
-          skipEmptyLines: true,
-          complete: (results) => resolve(results.data),
+      try {
+        const response = await fetch(`/files/${fileName}`);
+        
+        // Check file size from headers if available
+        const contentLength = response.headers.get('content-length');
+        const fileSizeMB = contentLength ? parseInt(contentLength) / (1024 * 1024) : 0;
+        
+        if (fileName === "file.csv") {
+          setOriginalFileSize(fileSizeMB);
+        } else if (fileName === "file_processed.csv") {
+          setProcessedFileSize(fileSizeMB);
+        }
+        
+        // If file is larger than threshold, show warning
+        if (fileSizeMB > MAX_CLIENT_PROCESS_SIZE_MB) {
+          setFileSizeWarning(true);
+          // For very large files, you might want to limit the preview
+          // Here we'll continue but note that for production you might want 
+          // to implement server-side processing for large files
+        }
+        
+        const csvText = await response.text();
+        return new Promise((resolve) => {
+          Papa.parse(csvText, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true,
+            complete: (results) => resolve(results.data),
+          });
         });
-      });
+      } catch (err) {
+        console.error(`Error fetching ${fileName}:`, err);
+        setError(`Could not load ${fileName}. Please check if the file exists.`);
+        return [];
+      }
     };
 
     // Determine basic column info: type (num/string), number of nulls
@@ -124,7 +153,11 @@ export default function ProcessingResultsPage() {
       for (let i = 0; i < numBins; i++) {
         const low = min + i * binWidth;
         const high = i === numBins - 1 ? max : low + binWidth;
-        bins.push(`${Math.round(low * 100) / 100} – ${Math.round(high * 100) / 100}`);
+        
+        // Format numbers for better readability
+        const formattedLow = formatNumber(low);
+        const formattedHigh = formatNumber(high);
+        bins.push(`${formattedLow} – ${formattedHigh}`);
       }
 
       data.forEach((row) => {
@@ -138,6 +171,21 @@ export default function ProcessingResultsPage() {
       });
 
       return { bins, counts };
+    };
+
+    // Format large numbers for better readability
+    const formatNumber = (num) => {
+      // Check if the number is very small or very large
+      if (Math.abs(num) < 0.01 || Math.abs(num) > 9999) {
+        return num.toExponential(2);
+      }
+      
+      // For numbers with decimal places
+      if (num % 1 !== 0) {
+        return Number(num.toFixed(2)).toString();
+      }
+      
+      return num.toString();
     };
 
     // For string columns, do simple frequency counts for top 10 categories, etc.
@@ -177,6 +225,91 @@ export default function ProcessingResultsPage() {
       return binsMap;
     };
 
+    // Calculate additional statistics for numerical columns
+    const calculateAdvancedStats = (data, columnTypes) => {
+      if (!data || !data.length) return {};
+      
+      const stats = {};
+      const columns = Object.keys(data[0]);
+      
+      columns.forEach(col => {
+        if (columnTypes[col] === "numeric") {
+          const values = data.map(row => row[col]).filter(val => val !== null && val !== undefined && !isNaN(val));
+          
+          if (values.length > 0) {
+            // Sort values for calculations
+            values.sort((a, b) => a - b);
+            
+            // Calculate basic statistics
+            const sum = values.reduce((acc, val) => acc + val, 0);
+            const mean = sum / values.length;
+            
+            // Calculate variance and standard deviation
+            const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length;
+            const stdDev = Math.sqrt(variance);
+            
+            // Calculate median
+            const mid = Math.floor(values.length / 2);
+            const median = values.length % 2 === 0 
+              ? (values[mid - 1] + values[mid]) / 2 
+              : values[mid];
+            
+            // Calculate quartiles
+            const q1Index = Math.floor(values.length * 0.25);
+            const q3Index = Math.floor(values.length * 0.75);
+            const q1 = values[q1Index];
+            const q3 = values[q3Index];
+            const iqr = q3 - q1;
+            
+            // Identify potential outliers (outside 1.5 * IQR)
+            const lowerBound = q1 - 1.5 * iqr;
+            const upperBound = q3 + 1.5 * iqr;
+            const outliers = values.filter(val => val < lowerBound || val > upperBound);
+            
+            stats[col] = {
+              min: values[0],
+              max: values[values.length - 1],
+              mean: mean,
+              median: median,
+              stdDev: stdDev,
+              q1: q1,
+              q3: q3,
+              iqr: iqr,
+              outlierCount: outliers.length,
+              outlierPercentage: (outliers.length / values.length) * 100
+            };
+          }
+        } else {
+          // For categorical columns
+          const valueFrequency = {};
+          let totalCount = 0;
+          
+          data.forEach(row => {
+            const val = row[col];
+            if (val !== null && val !== undefined && val !== "") {
+              valueFrequency[val] = (valueFrequency[val] || 0) + 1;
+              totalCount++;
+            }
+          });
+          
+          if (totalCount > 0) {
+            // Find most common value
+            const mostCommon = Object.entries(valueFrequency)
+              .sort((a, b) => b[1] - a[1])[0];
+              
+            stats[col] = {
+              uniqueCount: Object.keys(valueFrequency).length,
+              mostCommonValue: mostCommon[0],
+              mostCommonCount: mostCommon[1],
+              mostCommonPercentage: (mostCommon[1] / totalCount) * 100
+            };
+          }
+        }
+      });
+      
+      return stats;
+    };
+
     const loadData = async () => {
       try {
         // Load original and processed CSV data
@@ -184,12 +317,19 @@ export default function ProcessingResultsPage() {
         const afterData = await fetchCSVData("file_processed.csv");
     
         if (!afterData || afterData.length === 0) {
+          setError("No data found in the processed file.");
           setColumns([]);
+          setIsLoading(false);
           return;
         }
     
         const colNames = Object.keys(afterData[0]);
         setColumns(colNames);
+        
+        // Limit display columns to MAX_PREVIEW_COLUMNS
+        const limitedCols = colNames.slice(0, MAX_PREVIEW_COLUMNS);
+        setDisplayColumns(limitedCols);
+        
         setSelectedColumn(colNames[0]);
     
         // Column metadata
@@ -204,15 +344,31 @@ export default function ProcessingResultsPage() {
         // Calculate nulls filled
         let nullsFilled = 0;
         colNames.forEach(col => {
-          const beforeNulls = beforeData.filter(row => !row[col]).length;
-          const afterNulls = afterData.filter(row => !row[col]).length;
-          nullsFilled += beforeNulls - afterNulls;
+          if (beforeData[0] && col in beforeData[0]) {
+            const beforeNulls = beforeData.filter(row => row[col] === null || row[col] === "").length;
+            const afterNulls = afterData.filter(row => row[col] === null || row[col] === "").length;
+            nullsFilled += Math.max(0, beforeNulls - afterNulls); // Ensure non-negative
+          }
         });
     
         // Calculate duplicates removed
-        const beforeUniqueRows = new Set(beforeData.map(row => JSON.stringify(row))).size;
-        const afterUniqueRows = new Set(afterData.map(row => JSON.stringify(row))).size;
-        const duplicatesRemoved = beforeUniqueRows - afterUniqueRows;
+        const beforeUniqueSet = new Set();
+        const afterUniqueSet = new Set();
+        
+        // Use only common columns for duplicate detection
+        const commonCols = colNames.filter(col => beforeData[0] && col in beforeData[0]);
+        
+        beforeData.forEach(row => {
+          const uniqueKey = commonCols.map(col => row[col]).join('|');
+          beforeUniqueSet.add(uniqueKey);
+        });
+        
+        afterData.forEach(row => {
+          const uniqueKey = commonCols.map(col => row[col]).join('|');
+          afterUniqueSet.add(uniqueKey);
+        });
+        
+        const duplicatesRemoved = originalRows - cleanedRows - (beforeUniqueSet.size - afterUniqueSet.size);
     
         // Update stats
         setStats({
@@ -220,8 +376,13 @@ export default function ProcessingResultsPage() {
           cleanedRows,
           nullsFilled,
           duplicatesRemoved,
+          dataReduction: ((originalRows - cleanedRows) / originalRows * 100).toFixed(1)
         });
     
+        // Calculate advanced statistics
+        const advStats = calculateAdvancedStats(afterData, types);
+        setAdvancedStats(advStats);
+        
         // Build distribution bins
         const beforeBinsData = processData(beforeData);
         const afterBinsData = processData(afterData);
@@ -232,12 +393,12 @@ export default function ProcessingResultsPage() {
         setPreviewRows(afterData.slice(0, 5));
       } catch (err) {
         console.error("Error loading data: ", err);
+        setError("Failed to process data. Please check browser console for details.");
       } finally {
         setIsLoading(false);
       }
     };
     
-
     loadData();
   }, []);
 
@@ -246,9 +407,9 @@ export default function ProcessingResultsPage() {
    *    We pass in e.g. beforeBins[selectedColumn] or afterBins[selectedColumn].
    */
   const renderBinnedChart = (columnBins, color) => {
-    if (!columnBins) return <div className="text-beige/60">No data</div>;
+    if (!columnBins) return <div className="text-beige/60">No data available</div>;
     const { bins, counts } = columnBins;
-    if (!bins || bins.length === 0) return <div>No data</div>;
+    if (!bins || bins.length === 0) return <div className="text-beige/60">No data available</div>;
 
     // Find max count to scale bar heights
     const maxCount = Math.max(...counts);
@@ -262,7 +423,7 @@ export default function ProcessingResultsPage() {
             return (
               <div
                 key={idx}
-                className="flex-1 flex flex-col justify-end items-center mx-0.5"
+                className="flex-1 flex flex-col justify-end items-center mx-0.5 relative group"
               >
                 <div
                   className="w-full rounded-t-sm"
@@ -272,6 +433,10 @@ export default function ProcessingResultsPage() {
                     transition: "height 0.3s ease",
                   }}
                 />
+                {/* Tooltip showing exact count */}
+                <div className="absolute bottom-full mb-2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  Count: {count}
+                </div>
               </div>
             );
           })}
@@ -280,7 +445,7 @@ export default function ProcessingResultsPage() {
         {/* X labels */}
         <div className="flex mt-2 text-xs text-beige/80">
           {bins.map((label, idx) => (
-            <div key={idx} className="flex-1 text-center truncate px-0.5">
+            <div key={idx} className="flex-1 text-center truncate px-0.5 hover:overflow-visible hover:z-10 hover:whitespace-normal">
               {label}
             </div>
           ))}
@@ -290,57 +455,64 @@ export default function ProcessingResultsPage() {
   };
 
   /**
-   * 3) COMPARISON CHART: Overlapping bars or side-by-side
-   *    For "Before vs After", we want them to share the same bin labels if numeric.
-   *    But if the column is string, we might only chart the top categories from each set. 
-   *    (Below is a simplistic approach that matches indices 1:1.)
+   * 3) COMPARISON CHART: Vertical bar charts with side-by-side bars
    */
   const renderComparison = () => {
     const bBins = beforeBins[selectedColumn];
     const aBins = afterBins[selectedColumn];
     if (!bBins || !aBins) return <div className="text-beige/60">No distribution data available.</div>;
 
-    // We assume they have the same bin labels in the same order, e.g. if numeric
-    const beforeLabels = bBins.bins;
-    const afterLabels = aBins.bins;
-    const beforeCounts = bBins.counts;
-    const afterCounts = aBins.counts;
+    // Use the numeric column's natural bins
+    const columnType = columnTypes[selectedColumn] || "string";
+    const labels = columnType === "numeric" ? bBins.bins : bBins.bins.filter((_, i) => i < 5);
+    const beforeCounts = columnType === "numeric" ? bBins.counts : bBins.counts.filter((_, i) => i < 5);
+    const afterCounts = columnType === "numeric" ? aBins.counts : aBins.counts.filter((_, i) => i < 5);
 
-    // If the user has changed columns from numeric to string, etc., you may want to do more robust matching
-    const length = Math.min(beforeLabels.length, afterLabels.length);
+    // Calculate max for scaling
     const maxCount = Math.max(...beforeCounts, ...afterCounts);
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {Array.from({ length }).map((_, idx) => {
-          const bCount = beforeCounts[idx];
-          const aCount = afterCounts[idx];
-          const bPct = maxCount ? (bCount / maxCount) * 100 : 0;
-          const aPct = maxCount ? (aCount / maxCount) * 100 : 0;
-          return (
-            <div key={idx} className="flex flex-col">
-              {/* stacked or side-by-side bars */}
-              <div className="relative h-5 w-full bg-emerald-900/50 rounded overflow-hidden">
-                {/* 'Before' bar */}
-                <div
-                  className="absolute left-0 top-0 bottom-0 bg-[#007057]"
-                  style={{ width: `${bPct}%` }}
-                />
-                {/* 'After' bar in front (light color) */}
-                <div
-                  className="absolute left-0 top-0 bottom-0 bg-[#f3dab1]"
-                  style={{ width: `${aPct}%`, mixBlendMode: "lighten" }}
-                />
+      <div className="flex flex-col">
+        <div className="flex justify-between space-x-4 h-60">
+          {labels.map((label, idx) => {
+            const bCount = beforeCounts[idx] || 0;
+            const aCount = afterCounts[idx] || 0;
+            const bHeight = maxCount ? (bCount / maxCount) * 100 : 0;
+            const aHeight = maxCount ? (aCount / maxCount) * 100 : 0;
+            
+            return (
+              <div key={idx} className="flex-1 flex flex-col justify-end items-center group">
+                <div className="w-full flex justify-center items-end space-x-1 h-full">
+                  {/* Before bar */}
+                  <div className="w-5/12 relative">
+                    <div 
+                      className="absolute bottom-0 w-full bg-[#007057] rounded-t"
+                      style={{ height: `${bHeight}%` }}
+                    ></div>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none">
+                      {bCount}
+                    </div>
+                  </div>
+                  
+                  {/* After bar */}
+                  <div className="w-5/12 relative">
+                    <div 
+                      className="absolute bottom-0 w-full bg-[#f3dab1] rounded-t"
+                      style={{ height: `${aHeight}%` }}
+                    ></div>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none">
+                      {aCount}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-center mt-2 text-xs text-beige/80 truncate w-full px-1">
+                  {label}
+                </div>
               </div>
-              <div className="text-center mt-1 text-xs text-beige/80">
-                {beforeLabels[idx]}
-              </div>
-              <div className="text-center text-[0.7rem] text-beige/60">
-                {bCount} → {aCount}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -350,25 +522,59 @@ export default function ProcessingResultsPage() {
    */
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-beige text-xl">Loading CSV data...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#007057] to-emerald-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-beige mx-auto mb-4"></div>
+          <p className="text-beige text-xl">Loading CSV data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#007057] to-emerald-900">
+        <div className="bg-black/20 p-8 rounded-xl max-w-lg text-center">
+          <p className="text-beige text-xl mb-4">Error</p>
+          <p className="text-beige/80 mb-6">{error}</p>
+          <button 
+            onClick={() => router.push("/preprocessing/demo")} 
+            className="px-6 py-2.5 bg-emerald-700/30 text-beige border border-emerald-500/30 rounded-lg"
+          >
+            Return to Upload
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!columns || columns.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-beige text-xl">No columns found in the processed data.</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#007057] to-emerald-900">
+        <div className="bg-black/20 p-8 rounded-xl max-w-lg text-center">
+          <p className="text-beige text-xl mb-4">No Data Available</p>
+          <p className="text-beige/80 mb-6">No columns found in the processed data.</p>
+          <button 
+            onClick={() => router.push("/preprocessing/demo")} 
+            className="px-6 py-2.5 bg-emerald-700/30 text-beige border border-emerald-500/30 rounded-lg"
+          >
+            Return to Upload
+          </button>
+        </div>
       </div>
     );
   }
 
-  console.log("Filename from URL:", filename);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#007057] to-emerald-900">
-
+      {/* File size warning */}
+      {fileSizeWarning && (
+        <div className="bg-yellow-500/20 border border-yellow-400/30 py-2 px-4 text-center">
+          <p className="text-yellow-100">
+            Some data visualizations may be limited due to file size constraints.
+          </p>
+        </div>
+      )}
 
       {/* Header */}
       <div className="pt-8 pb-6 px-6">
@@ -384,16 +590,16 @@ export default function ProcessingResultsPage() {
               <h1 className="text-4xl font-bold text-beige">Processing Results</h1>
             </div>
             {filename ? (
-        <a
-          href={`http://localhost:5001/download/${filename}`}
-          className="bg-green-500 text-white px-4 py-2 rounded"
-          download
-        >
-          Download Processed File
-        </a>
-      ) : (
-        <p>No processed file available.</p>
-      )}
+              <a
+                href={`http://localhost:5001/download/processed_${filename}`}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300"
+                download
+              >
+                Download Processed File
+              </a>
+            ) : (
+              <p className="text-beige/60">No processed file name provided</p>
+            )}
           </div>
         </div>
       </div>
@@ -405,33 +611,42 @@ export default function ProcessingResultsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-black/20 rounded-xl p-6">
               <h3 className="text-emerald-300 font-medium mb-1">Original Rows</h3>
-              <p className="text-beige text-3xl font-bold">{stats.originalRows}</p>
+              <p className="text-beige text-3xl font-bold">{stats.originalRows?.toLocaleString() || 0}</p>
             </div>
             <div className="bg-black/20 rounded-xl p-6">
               <h3 className="text-emerald-300 font-medium mb-1">Cleaned Rows</h3>
-              <p className="text-beige text-3xl font-bold">{stats.cleanedRows}</p>
-              <p className="text-beige/60 text-sm">
-                ({Math.round((stats.cleanedRows / stats.originalRows) * 100)}% of original)
-              </p>
+              <p className="text-beige text-3xl font-bold">{stats.cleanedRows?.toLocaleString() || 0}</p>
+              {stats.originalRows > 0 && (
+                <p className="text-beige/60 text-sm">
+                  ({Math.round((stats.cleanedRows / stats.originalRows) * 100)}% of original)
+                </p>
+              )}
             </div>
             <div className="bg-black/20 rounded-xl p-6">
               <h3 className="text-emerald-300 font-medium mb-1">Nulls Filled</h3>
-              <p className="text-beige text-3xl font-bold">{stats.nullsFilled}</p>
+              <p className="text-beige text-3xl font-bold">{stats.nullsFilled?.toLocaleString() || 0}</p>
             </div>
             <div className="bg-black/20 rounded-xl p-6">
               <h3 className="text-emerald-300 font-medium mb-1">Duplicates Removed</h3>
-              <p className="text-beige text-3xl font-bold">{stats.duplicatesRemoved}</p>
+              <p className="text-beige text-3xl font-bold">{stats.duplicatesRemoved?.toLocaleString() || 0}</p>
             </div>
           </div>
 
           {/* Data Preview (AFTER data) */}
           <div className="bg-black/20 rounded-xl mb-8 p-6">
-            <h2 className="text-xl font-bold text-beige mb-4">Data Preview (After Cleaning)</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-beige">Data Preview (After Cleaning)</h2>
+              {columns.length > MAX_PREVIEW_COLUMNS && (
+                <div className="text-beige/60 text-sm">
+                  Showing {MAX_PREVIEW_COLUMNS} of {columns.length} columns
+                </div>
+              )}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-emerald-500/30">
-                    {columns.map((col) => (
+                    {displayColumns.map((col) => (
                       <th key={col} className="text-left py-3 px-4 text-beige font-medium">
                         {col}
                       </th>
@@ -446,7 +661,7 @@ export default function ProcessingResultsPage() {
                         rowIdx % 2 === 0 ? "bg-emerald-900/10" : ""
                       }`}
                     >
-                      {columns.map((col) => (
+                      {displayColumns.map((col) => (
                         <td key={col} className="py-2 px-4 text-beige/80">
                           {row[col] == null ? "" : String(row[col])}
                         </td>
@@ -457,7 +672,6 @@ export default function ProcessingResultsPage() {
               </table>
             </div>
             <div className="mt-4 text-center">
-              {/* Adjust if you have the actual row count from after data */}
               <p className="text-beige/60">Showing {previewRows.length} of {stats.cleanedRows} rows</p>
             </div>
           </div>
@@ -493,7 +707,7 @@ export default function ProcessingResultsPage() {
               </div>
             </div>
 
-            {/* Overlapping Comparison */}
+            {/* Vertical Bar Comparison */}
             <div className="bg-black/30 rounded-lg p-4">
               <h3 className="text-center text-beige mb-4">Before vs After Comparison</h3>
               <div className="flex justify-center mb-4">
@@ -510,11 +724,12 @@ export default function ProcessingResultsPage() {
             </div>
           </div>
 
-          {/* Column Info */}
-          <div className="bg-black/20 rounded-xl mb-8 p-6">
-            <h2 className="text-xl font-bold text-beige mb-4">Column Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+          {/* Column Info and Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            {/* Column Information */}
+            <div className="bg-black/20 rounded-xl p-6">
+              <h2 className="text-xl font-bold text-beige mb-4">Column Information</h2>
+              <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-emerald-500/30">
@@ -543,42 +758,76 @@ export default function ProcessingResultsPage() {
                   </tbody>
                 </table>
               </div>
-              <div className="bg-black/30 rounded-lg p-4">
-                <div className="flex flex-col h-full justify-center">
-                  <h3 className="text-lg font-bold text-beige mb-3">Data Summary</h3>
+            </div>
+
+            {/* Enhanced Data Summary */}
+            <div className="bg-black/20 rounded-xl p-6">
+              <h2 className="text-xl font-bold text-beige mb-4">Enhanced Data Insights</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium text-emerald-300 mb-2">Dataset Overview</h3>
                   <ul className="space-y-2 text-beige/80">
                     <li>
-                      <span className="text-emerald-300">Total Features:</span>{" "}
+                      <span className="text-emerald-200">Total Features:</span>{" "}
                       {columns.length}
                     </li>
                     <li>
-                      <span className="text-emerald-300">Target Column:</span> Target?
-                      {/* Adjust if you know which is your target */}
-                    </li>
-                    {/* Example: count numeric vs. categorical */}
-                    <li>
-                      <span className="text-emerald-300">Numeric Columns:</span>{" "}
-                      {
-                        Object.values(columnTypes).filter((t) => t === "numeric")
-                          .length
-                      }
+                      <span className="text-emerald-200">Numeric Columns:</span>{" "}
+                      {Object.values(columnTypes).filter((t) => t === "numeric").length}
                     </li>
                     <li>
-                      <span className="text-emerald-300">Categorical Columns:</span>{" "}
-                      {
-                        Object.values(columnTypes).filter((t) => t !== "numeric")
-                          .length
-                      }
+                      <span className="text-emerald-200">Categorical Columns:</span>{" "}
+                      {Object.values(columnTypes).filter((t) => t !== "numeric").length}
                     </li>
                     <li>
-                      <span className="text-emerald-300">Columns w/ Missing Values:</span>{" "}
-                      {
-                        Object.entries(columnNulls).filter(([, c]) => c > 0)
-                          .length
-                      }
+                      <span className="text-emerald-200">Columns with Missing Values:</span>{" "}
+                      {Object.entries(columnNulls).filter(([, c]) => c > 0).length}
+                    </li>
+                    <li>
+                      <span className="text-emerald-200">Data Reduction:</span>{" "}
+                      {stats.dataReduction}% fewer rows after cleaning
                     </li>
                   </ul>
                 </div>
+                
+                {selectedColumn && advancedStats[selectedColumn] && (
+                  <div>
+                    <h3 className="text-lg font-medium text-emerald-300 mb-2">
+                      Statistics for {selectedColumn}
+                    </h3>
+                    {columnTypes[selectedColumn] === "numeric" ? (
+                      <ul className="space-y-2 text-beige/80">
+                        <li>
+                          <span className="text-emerald-200">Range:</span> {advancedStats[selectedColumn].min.toFixed(2)} to {advancedStats[selectedColumn].max.toFixed(2)}
+                        </li>
+                        <li>
+                          <span className="text-emerald-200">Mean:</span> {advancedStats[selectedColumn].mean.toFixed(2)}
+                        </li>
+                        <li>
+                          <span className="text-emerald-200">Median:</span> {advancedStats[selectedColumn].median.toFixed(2)}
+                        </li>
+                        <li>
+                          <span className="text-emerald-200">Standard Deviation:</span> {advancedStats[selectedColumn].stdDev.toFixed(2)}
+                        </li>
+                        <li>
+                          <span className="text-emerald-200">Potential Outliers:</span> {advancedStats[selectedColumn].outlierCount} ({advancedStats[selectedColumn].outlierPercentage.toFixed(1)}%)
+                        </li>
+                      </ul>
+                    ) : (
+                      <ul className="space-y-2 text-beige/80">
+                        <li>
+                          <span className="text-emerald-200">Unique Values:</span> {advancedStats[selectedColumn].uniqueCount}
+                        </li>
+                        <li>
+                          <span className="text-emerald-200">Most Common:</span> {advancedStats[selectedColumn].mostCommonValue}
+                        </li>
+                        <li>
+                          <span className="text-emerald-200">Frequency:</span> {advancedStats[selectedColumn].mostCommonCount} occurrences ({advancedStats[selectedColumn].mostCommonPercentage.toFixed(1)}%)
+                        </li>
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -588,9 +837,15 @@ export default function ProcessingResultsPage() {
             <div className="flex flex-col md:flex-row items-center justify-between">
               <p className="text-beige mb-4 md:mb-0">Ready to use your cleaned data?</p>
               <div className="flex space-x-4">
-                <button className="px-6 py-2.5 bg-beige text-emerald-900 rounded-lg font-medium hover:bg-emerald-50 transition-all duration-200">
-                  Export Data
-                </button>
+                {filename && (
+                  <a
+                    href={`http://localhost:5001/download/processed_${filename}`}
+                    className="px-6 py-2.5 bg-beige text-emerald-900 rounded-lg font-medium hover:bg-emerald-50 transition-all duration-200"
+                    download
+                  >
+                    Download CSV
+                  </a>
+                )}
                 <a
                   href="https://github.com/rohannair2022/weedout"
                   target="_blank"
