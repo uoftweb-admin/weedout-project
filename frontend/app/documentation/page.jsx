@@ -27,7 +27,13 @@ export default function DocumentationPage() {
       {description: descriptionContributor, link: "contributors-guide", title: "Contributors' Guide"},
     ];
 
-
+    // Define resource links with helpful data preprocessing topics
+    const resourceLinks = [
+      { text: "Data Preprocessing Overview", href: "https://www.geeksforgeeks.org/data-preprocessing-in-data-mining/?utm_source=chatgpt.com" },
+      { text: "ML Preprocessing Steps", href: "https://lakefs.io/blog/data-preprocessing-in-machine-learning/?utm_source=chatgpt.com" },
+      { text: "Classification Methods", href: "https://cartography-playground.gitlab.io/playgrounds/data-classification-methods/?utm_source=chatgpt.com" },
+      { text: "Oversampling & Undersampling", href: "https://en.wikipedia.org/wiki/Oversampling_and_undersampling_in_data_analysis?utm_source=chatgpt.com" }
+    ];
 
     return (
       <div
@@ -43,17 +49,17 @@ export default function DocumentationPage() {
             >
               Newest Version: {" "}
               <Link 
-                href="/#" // direct to new version description
+                href="/#latest-changes" // direct to new version description
                 // style={{color: WHITE}}
                 // when hover over, get transparent and + underline
                 className="font-normal text-blue-200 hover:text-blue-300 
                   transition-colors hover:underline underline-offset-4
                   text-sm sm:text-base md:text-lg" // fluid text size
-                onClick={(e) => {
-                  e.preventDefault(); // Prevent default link behavior
-                }}
+                // onClick={(e) => {
+                //   e.preventDefault(); // Prevent default link behavior
+                // }}
               >
-                1.2 (MM/DD/YYYY)
+                1.2 (08/21/2024)
               </Link>
             </h1>
             <h1 
@@ -62,16 +68,16 @@ export default function DocumentationPage() {
             >
               Previous Versions: {" "}
               <Link 
-                href="/#" // direct to new version description
+                href="/#latest-changes" // direct to new version description
                 // style={{color: WHITE}}
                 className="font-normal text-blue-200 hover:text-blue-300 
                   transition-colors hover:underline underline-offset-4
                   text-sm sm:text-base md:text-lg" // fluid text size
-                onClick={(e) => {
-                  e.preventDefault(); // Prevent default link behavior
-                }}
+                // onClick={(e) => {
+                //   e.preventDefault(); // Prevent default link behavior
+                // }}
               >
-                link
+                here
               </Link>
             </h1>
             <h1 
@@ -80,19 +86,21 @@ export default function DocumentationPage() {
             >
               Useful Resources and Help: {" "}
               <div className="inline-block space-x-2">
-                {[1, 2, 3].map((_, i) => (
+                {resourceLinks.map((link, i) => (
                   <React.Fragment key={i}>
                     <Link 
-                      href="/#"
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="font-normal text-blue-200
                        hover:text-blue-300 transition-colors 
                        hover:underline underline-offset-4
                        text-sm sm:text-base md:text-lg" // fluid text size
-                      onClick={(e) => e.preventDefault()}
+                      // onClick={(e) => e.preventDefault()}
                     >
-                      link
+                      {link.text}
                     </Link>
-                    {i < 2 && <span>|</span>}
+                    {i < resourceLinks.length - 1 && <span className="text-white">|</span>}
                   </React.Fragment>
                 ))}
               </div>
