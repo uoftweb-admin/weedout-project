@@ -71,6 +71,10 @@ export default function PreprocessingConfig() {
       return;
     }
   
+    if (samplingStrategy === "Select Sampling") {
+      setSamplingStrategy("none");
+    }
+  
     // Convert values to match backend expectations
     // Convert datasetType to integer (0 for cross-sectional, 1 for time-series)
     const datasetTypeInt = datasetType === "cross-sectional" ? 0 : 1;
@@ -78,11 +82,15 @@ export default function PreprocessingConfig() {
     // Convert modelType to integer (1 for classification, 0 for regression)
     const modelTypeInt = modelType === "classification" ? 1 : 0;
     
-    // Map sampling strategy to integer
+    // Map sampling strategy to integer - THIS IS CRITICAL
     let samplingInt = 0; // Default: no sampling
     if (samplingStrategy === "undersampling") samplingInt = 1;
     else if (samplingStrategy === "oversampling") samplingInt = 2;
     else if (samplingStrategy === "smote") samplingInt = 3;
+    else samplingInt = 0; // Explicitly set to 0 for "none" or any default case
+  
+    console.log(`📊 Sending sampling strategy: ${samplingStrategy}`);  
+    console.log(`📊 Sending sampling INT: ${samplingInt}`);
   
     // Convert column inputs into arrays
     const dropColumnsArray = columnsToDrop.split(",").map((col) => col.trim()).filter(col => col !== "");
@@ -95,21 +103,35 @@ export default function PreprocessingConfig() {
     formData.append("untouched_columns", JSON.stringify(untouchedColumnsArray)); 
     formData.append("dataset_type", datasetTypeInt);
     formData.append("model_type", modelTypeInt);
-    formData.append("sampling", samplingInt);
-    formData.append("sampling_strategy", samplingStrategy);
+    formData.append("sampling", samplingInt);  // Send as integer (0, 1, 2, 3)
+    formData.append("sampling_strategy", samplingStrategy);  // Send string version for backend logging
+  
+    // Log the complete form data for debugging
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
   
     try {
+      console.log("Sending request to backend...");
+      
       const response = await axios.post("http://localhost:5001/process", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
   
       const filename = response.data.filename;
       console.log("Backend responded with filename:", filename);
+      console.log("Options used:", response.data.options_used);
+  
+      // Make sure we store the correct sampling strategy string in localStorage
+      localStorage.setItem('processingOptions', JSON.stringify({
+        ...response.data.options_used,
+        sampling: response.data.options_used.sampling || samplingStrategy
+      }));
   
       router.push(`/preprocessing/results?file=${filename}`);
     } catch (err) {
       console.error("Processing failed:", err);
-      alert("Something went wrong while processing the file: " + (err.response?.data?.error || err.message));
+      alert(`Something went wrong while processing the file: ${err.response?.data?.error || err.message}`);
     }
   };
 
