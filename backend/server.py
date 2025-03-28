@@ -9,6 +9,7 @@ from weedout import preprocess
 app = Flask(__name__)
 CORS(app)
 
+# Original folders
 UPLOAD_FOLDER = "temp"
 PROCESSED_FOLDER = "processed"
 
@@ -39,11 +40,11 @@ def process_file():
     public_original_path = os.path.join(PUBLIC_FILES_FOLDER, "file.csv")
     shutil.copy2(file_path, public_original_path)
     
-     # Check file size and potentially downsample for large files
+    # Check file size and potentially downsample for large files
     file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
     downsample_warning = False
     
-        # If file is over 10MB, consider downsampling for preview
+    # If file is over 10MB, consider downsampling for preview
     if file_size_mb > 10:
         try:
             # Read with pandas and sample 
@@ -54,7 +55,6 @@ def process_file():
             downsample_warning = True
         except Exception as e:
             print(f"Warning: Could not downsample large file: {e}")
-    
 
     # Retrieve preprocessing parameters from the request
     target_column = request.form.get("target_column", "")
@@ -79,16 +79,18 @@ def process_file():
             )
         else:
             processed_df = preprocess.preprocess_pipeline(
-            file_path=file_path,
-            target_column=target_column,
-            dropped_columns=drop_columns,
-            untouched_columns=untouched_columns,
-            type_dataset=dataset_type,
-            sampling=sampling,
-            classfication=model_type,
-            strategy_sample=sampling_strategy,
-        )
-        processed_filename = "processed_" + file.filename
+                file_path=file_path,
+                target_column=target_column,
+                dropped_columns=drop_columns,
+                untouched_columns=untouched_columns,
+                type_dataset=dataset_type,
+                sampling=sampling,
+                classfication=model_type,
+                strategy_sample=sampling_strategy,
+            )
+        
+        # Save to processed folder with original name
+        processed_filename = "processed_" + original_filename
         processed_file_path = os.path.join(PROCESSED_FOLDER, processed_filename)
         processed_df.to_csv(processed_file_path, index=False)
         
@@ -109,17 +111,14 @@ def process_file():
             except Exception as e:
                 print(f"Error deleting uploaded file: {e}")
 
-        return jsonify(
-            {
-                "message": "File processed successfully", 
-                "filename": processed_filename,
-                "downsample_warning": downsample_warning  # return the warning as well
-             }
-            ), 200
+        return jsonify({
+            "message": "File processed successfully", 
+            "filename": processed_filename,
+            "downsample_warning": downsample_warning  # return warning
+        }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):
@@ -127,17 +126,7 @@ def download_file(filename):
     if not os.path.exists(file_path):
         return jsonify({"error": "File not found"}), 404
     
-    # @after_this_request
-    # def remove_file(response):
-    #     try:
-    #         os.remove(file_path)
-    #         print(f"Deleted processed file: {file_path}")
-    #     except Exception as e:
-    #         print(f"Error deleting files: {e}")
-    #     return response
-
     return send_file(file_path, as_attachment=True)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)
-
