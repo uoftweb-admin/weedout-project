@@ -226,7 +226,7 @@ export default function ContributorsGuidePage() {
         {/* Header Section */}
         <section className="mb-16">
           <div className="relative inline-block mb-8">
-            <h1 className="text-beige text-4xl sm:text-4xl lg:text-5xl font-bold">Contributor's Guide</h1>
+          <h1 className="text-beige text-4xl sm:text-4xl lg:text-5xl font-bold">Contributor's Guide</h1>
             <div className="absolute -bottom-3 left-0 w-full h-1 bg-infoBoxes rounded-full"></div>
           </div>
 
