@@ -4,54 +4,50 @@ import { useRouter } from "next/navigation";
 import { GoArrowLeft } from "react-icons/go";
 import Papa from "papaparse";
 import { useSearchParams } from "next/navigation";
+import { Inria_Serif } from "next/font/google";
 
-// Example: we want 10 bins for numeric columns
+const inriaSerif = Inria_Serif({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+// Configuration constants
 const NUM_BINS = 10;
-// Max columns to display in preview
 const MAX_PREVIEW_COLUMNS = 8;
-// Max file size to process on client (1MB)
 const MAX_CLIENT_PROCESS_SIZE_MB = 1;
 
 export default function ProcessingResultsPage() {
   const router = useRouter();
-
   const searchParams = useSearchParams();
   const filename = searchParams.get("file");
 
-  // Column definitions & user selections
+  // State management
   const [columns, setColumns] = useState([]);
   const [displayColumns, setDisplayColumns] = useState([]);
   const [columnTypes, setColumnTypes] = useState({});   // { colName: "numeric" | "string" }
   const [columnNulls, setColumnNulls] = useState({});   // { colName: number_of_nulls }
   const [selectedColumn, setSelectedColumn] = useState("");
-
-  // Distributions
   const [beforeBins, setBeforeBins] = useState({});     // { colName: { bins: [...], counts: [...] } }
   const [afterBins, setAfterBins] = useState({});       // same structure
-
-  // Data for preview (we'll show after-data in the table)
   const [previewRows, setPreviewRows] = useState([]);
-  
-  // File information
   const [fileSizeWarning, setFileSizeWarning] = useState(false);
   const [originalFileSize, setOriginalFileSize] = useState(0);
   const [processedFileSize, setProcessedFileSize] = useState(0);
-
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [stats, setStats] = useState({});
   const [advancedStats, setAdvancedStats] = useState({});
+  const [processingOptions, setProcessingOptions] = useState({});
 
   /**
-   * 1) FETCH CSV + PARSE
+   * Fetch and process CSV data
    */
   useEffect(() => {
     const fetchCSVData = async (fileName) => {
       try {
         const response = await fetch(`/files/${fileName}`);
         
-        // Check file size from headers if available
+        // Check file size
         const contentLength = response.headers.get('content-length');
         const fileSizeMB = contentLength ? parseInt(contentLength) / (1024 * 1024) : 0;
         
@@ -61,12 +57,8 @@ export default function ProcessingResultsPage() {
           setProcessedFileSize(fileSizeMB);
         }
         
-        // If file is larger than threshold, show warning
         if (fileSizeMB > MAX_CLIENT_PROCESS_SIZE_MB) {
           setFileSizeWarning(true);
-          // For very large files, you might want to limit the preview
-          // Here we'll continue but note that for production you might want 
-          // to implement server-side processing for large files
         }
         
         const csvText = await response.text();
@@ -85,29 +77,23 @@ export default function ProcessingResultsPage() {
       }
     };
 
-    // Determine basic column info: type (num/string), number of nulls
+    // Analyze column data types and null values
     const getColumnInfo = (data) => {
       if (!data || !data.length) return { types: {}, nullCounts: {} };
 
-      const firstRow = data[0];
-      const colNames = Object.keys(firstRow);
       const types = {};
       const nullCounts = {};
 
-      colNames.forEach((col) => {
-        let numeric = true;    // assume numeric until proven otherwise
+      Object.keys(data[0]).forEach((col) => {
+        let numeric = true;
         let nullCount = 0;
 
         data.forEach((row) => {
           const val = row[col];
-          // Check for null or empty
           if (val === null || val === "" || val === undefined) {
             nullCount += 1;
-          } else {
-            // If any non-empty row is non-numeric, treat entire column as string
-            if (typeof val !== "number") {
-              numeric = false;
-            }
+          } else if (typeof val !== "number") {
+            numeric = false;
           }
         });
 
@@ -118,10 +104,11 @@ export default function ProcessingResultsPage() {
       return { types, nullCounts };
     };
 
-    // For numeric columns, compute min & max so we can bin
+    // Get min/max for numeric columns
     const getMinMax = (data, col) => {
       let min = Number.POSITIVE_INFINITY;
       let max = Number.NEGATIVE_INFINITY;
+      
       data.forEach((row) => {
         const val = row[col];
         if (typeof val === "number") {
@@ -129,23 +116,36 @@ export default function ProcessingResultsPage() {
           if (val > max) max = val;
         }
       });
+      
       if (min === Number.POSITIVE_INFINITY || max === Number.NEGATIVE_INFINITY) {
-        // means we had no valid numeric data
         return { min: 0, max: 0 };
       }
+      
       return { min, max };
     };
 
-    // Return an object describing bins & counts for a numeric column
+    // Format numbers for readability
+    const formatNumber = (num) => {
+      if (Math.abs(num) < 0.01 || Math.abs(num) > 9999) {
+        return num.toExponential(2);
+      }
+      
+      if (num % 1 !== 0) {
+        return Number(num.toFixed(2)).toString();
+      }
+      
+      return num.toString();
+    };
+
+    // Create distribution bins for numeric columns
     const binNumericColumn = (data, col, min, max, numBins = NUM_BINS) => {
       if (min >= max) {
-        // All values the same, or no data
-        // Just put them in one "bin"
         return {
           bins: [`${min}`],
           counts: [data.length],
         };
       }
+      
       const binWidth = (max - min) / numBins;
       const bins = [];
       const counts = new Array(numBins).fill(0);
@@ -154,7 +154,6 @@ export default function ProcessingResultsPage() {
         const low = min + i * binWidth;
         const high = i === numBins - 1 ? max : low + binWidth;
         
-        // Format numbers for better readability
         const formattedLow = formatNumber(low);
         const formattedHigh = formatNumber(high);
         bins.push(`${formattedLow} – ${formattedHigh}`);
@@ -164,7 +163,6 @@ export default function ProcessingResultsPage() {
         const val = row[col];
         if (typeof val === "number") {
           let binIndex = Math.floor(((val - min) / (max - min)) * numBins);
-          // edge case: val == max
           if (binIndex === numBins) binIndex = numBins - 1;
           counts[binIndex] += 1;
         }
@@ -173,40 +171,28 @@ export default function ProcessingResultsPage() {
       return { bins, counts };
     };
 
-    // Format large numbers for better readability
-    const formatNumber = (num) => {
-      // Check if the number is very small or very large
-      if (Math.abs(num) < 0.01 || Math.abs(num) > 9999) {
-        return num.toExponential(2);
-      }
-      
-      // For numbers with decimal places
-      if (num % 1 !== 0) {
-        return Number(num.toFixed(2)).toString();
-      }
-      
-      return num.toString();
-    };
-
-    // For string columns, do simple frequency counts for top 10 categories, etc.
+    // Create frequency counts for string columns
     const binStringColumn = (data, col) => {
       const freq = {};
+      
       data.forEach((row) => {
         const val = row[col];
         if (val == null || val === "") return;
         if (!freq[val]) freq[val] = 0;
         freq[val]++;
       });
-      // Sort by freq desc
+      
+      // Sort by frequency and get top 10
       const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
-      // Maybe keep top 10
       const top = sorted.slice(0, 10);
+      
       return {
         bins: top.map(([k]) => String(k)),
         counts: top.map(([_, count]) => count),
       };
     };
 
+    // Process column data into bins
     const processData = (data) => {
       if (!data || !data.length) return {};
 
@@ -222,10 +208,11 @@ export default function ProcessingResultsPage() {
           binsMap[col] = binStringColumn(data, col);
         }
       });
+      
       return binsMap;
     };
 
-    // Calculate additional statistics for numerical columns
+    // Calculate statistics for columns
     const calculateAdvancedStats = (data, columnTypes) => {
       if (!data || !data.length) return {};
       
@@ -234,34 +221,29 @@ export default function ProcessingResultsPage() {
       
       columns.forEach(col => {
         if (columnTypes[col] === "numeric") {
-          const values = data.map(row => row[col]).filter(val => val !== null && val !== undefined && !isNaN(val));
+          // Handle numeric columns
+          const values = data.map(row => row[col])
+                             .filter(val => val !== null && val !== undefined && !isNaN(val));
           
           if (values.length > 0) {
-            // Sort values for calculations
             values.sort((a, b) => a - b);
             
-            // Calculate basic statistics
             const sum = values.reduce((acc, val) => acc + val, 0);
             const mean = sum / values.length;
-            
-            // Calculate variance and standard deviation
             const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length;
             const stdDev = Math.sqrt(variance);
             
-            // Calculate median
             const mid = Math.floor(values.length / 2);
             const median = values.length % 2 === 0 
               ? (values[mid - 1] + values[mid]) / 2 
               : values[mid];
             
-            // Calculate quartiles
             const q1Index = Math.floor(values.length * 0.25);
             const q3Index = Math.floor(values.length * 0.75);
             const q1 = values[q1Index];
             const q3 = values[q3Index];
             const iqr = q3 - q1;
             
-            // Identify potential outliers (outside 1.5 * IQR)
             const lowerBound = q1 - 1.5 * iqr;
             const upperBound = q3 + 1.5 * iqr;
             const outliers = values.filter(val => val < lowerBound || val > upperBound);
@@ -280,7 +262,7 @@ export default function ProcessingResultsPage() {
             };
           }
         } else {
-          // For categorical columns
+          // Handle categorical columns
           const valueFrequency = {};
           let totalCount = 0;
           
@@ -293,7 +275,6 @@ export default function ProcessingResultsPage() {
           });
           
           if (totalCount > 0) {
-            // Find most common value
             const mostCommon = Object.entries(valueFrequency)
               .sort((a, b) => b[1] - a[1])[0];
               
@@ -310,9 +291,52 @@ export default function ProcessingResultsPage() {
       return stats;
     };
 
+    // Check if a column might be a time-related column
+    const getTimeColumns = (data) => {
+      if (!data || data.length === 0) return [];
+      
+      const colNames = Object.keys(data[0]);
+      const datePatterns = [
+        /^\d{4}-\d{2}-\d{2}/,  // ISO date
+        /^\d{1,2}\/\d{1,2}\/\d{4}/,  // MM/DD/YYYY
+        /^\d{10,13}$/  // Unix timestamp
+      ];
+      
+      return colNames.filter(col => {
+        const sample = data.slice(0, Math.min(10, data.length));
+        return sample.some(row => {
+          const val = row[col];
+          return typeof val === 'string' && datePatterns.some(pattern => pattern.test(val));
+        });
+      });
+    };
+
+    // Main data loading function
     const loadData = async () => {
       try {
-        // Load original and processed CSV data
+        console.log("Starting loadData with filename:", filename);
+        
+        // Set default processing options
+        const defaultOptions = {
+          model_type: "classification",
+          sampling: "none",
+          dataset_type: "cross-sectional",
+          target_column: "target",
+          columns_dropped: 0,
+          columns_untouched: 0
+        };
+        
+        // Get processing options from localStorage if available
+        const storedOptions = localStorage.getItem('processingOptions');
+        if (storedOptions) {
+          console.log("Retrieved stored options from localStorage:", storedOptions);
+          setProcessingOptions(JSON.parse(storedOptions));
+        } else {
+          console.log("No stored options found in localStorage, using defaults");
+          setProcessingOptions(defaultOptions);
+        }
+
+        // Load CSV data
         const beforeData = await fetchCSVData("file.csv");
         const afterData = await fetchCSVData("file_processed.csv");
     
@@ -323,31 +347,34 @@ export default function ProcessingResultsPage() {
           return;
         }
     
-        const colNames = Object.keys(afterData[0]);
-        setColumns(colNames);
+        // Get column names
+        const beforeColNames = beforeData && beforeData.length > 0 ? Object.keys(beforeData[0]) : [];
+        const afterColNames = Object.keys(afterData[0]);
         
-        // Limit display columns to MAX_PREVIEW_COLUMNS
-        const limitedCols = colNames.slice(0, MAX_PREVIEW_COLUMNS);
-        setDisplayColumns(limitedCols);
+        // Detect dropped columns
+        const droppedColumns = beforeColNames.filter(col => !afterColNames.includes(col));
+        const isColumnsDropped = droppedColumns.length > 0;
         
-        setSelectedColumn(colNames[0]);
+        setColumns(afterColNames);
+        setDisplayColumns(afterColNames.slice(0, MAX_PREVIEW_COLUMNS));
+        setSelectedColumn(afterColNames[0]);
     
-        // Column metadata
+        // Analyze column types and nulls
         const { types, nullCounts } = getColumnInfo(afterData);
         setColumnTypes(types);
         setColumnNulls(nullCounts);
     
-        // Compute stats
+        // Calculate basic statistics
         const originalRows = beforeData.length;
         const cleanedRows = afterData.length;
         
         // Calculate nulls filled
         let nullsFilled = 0;
-        colNames.forEach(col => {
+        afterColNames.forEach(col => {
           if (beforeData[0] && col in beforeData[0]) {
             const beforeNulls = beforeData.filter(row => row[col] === null || row[col] === "").length;
             const afterNulls = afterData.filter(row => row[col] === null || row[col] === "").length;
-            nullsFilled += Math.max(0, beforeNulls - afterNulls); // Ensure non-negative
+            nullsFilled += Math.max(0, beforeNulls - afterNulls);
           }
         });
     
@@ -355,8 +382,7 @@ export default function ProcessingResultsPage() {
         const beforeUniqueSet = new Set();
         const afterUniqueSet = new Set();
         
-        // Use only common columns for duplicate detection
-        const commonCols = colNames.filter(col => beforeData[0] && col in beforeData[0]);
+        const commonCols = afterColNames.filter(col => beforeData[0] && col in beforeData[0]);
         
         beforeData.forEach(row => {
           const uniqueKey = commonCols.map(col => row[col]).join('|');
@@ -368,26 +394,46 @@ export default function ProcessingResultsPage() {
           afterUniqueSet.add(uniqueKey);
         });
         
-        const duplicatesRemoved = originalRows - cleanedRows - (beforeUniqueSet.size - afterUniqueSet.size);
+        const duplicatesRemoved = beforeData.length - beforeUniqueSet.size;
+        
+        // Determine data characteristics
+        const isOversampled = cleanedRows > originalRows;
+        const isUndersampled = cleanedRows < originalRows;
+        const dataChangePercent = ((cleanedRows - originalRows) / originalRows * 100).toFixed(1);
+        
+        // Get time columns for display purposes only
+        const timeColumns = getTimeColumns(afterData);
+        
+        // Detect SMOTE as fallback
+        let isSmote = false;
+        if (isOversampled) {
+          // Simple heuristic: if oversampled and has categorical columns
+          const categoricalCols = Object.entries(types).filter(([_, type]) => type !== 'numeric');
+          isSmote = categoricalCols.length > 0 && dataChangePercent > 10;
+        }
     
-        // Update stats
+        // Update statistics - We'll update the model-specific flags in the useEffect
         setStats({
           originalRows,
           cleanedRows,
           nullsFilled,
           duplicatesRemoved,
-          dataReduction: ((originalRows - cleanedRows) / originalRows * 100).toFixed(1)
+          dataChangePercent,
+          isOversampled,
+          isUndersampled,
+          timeColumns,
+          isColumnsDropped,
+          droppedColumns,
+          isSmote,
+          targetColumn: "" // Will be updated from processingOptions in useEffect
         });
     
         // Calculate advanced statistics
-        const advStats = calculateAdvancedStats(afterData, types);
-        setAdvancedStats(advStats);
+        setAdvancedStats(calculateAdvancedStats(afterData, types));
         
         // Build distribution bins
-        const beforeBinsData = processData(beforeData);
-        const afterBinsData = processData(afterData);
-        setBeforeBins(beforeBinsData);
-        setAfterBins(afterBinsData);
+        setBeforeBins(processData(beforeData));
+        setAfterBins(processData(afterData));
     
         // Preview first few rows
         setPreviewRows(afterData.slice(0, 5));
@@ -400,11 +446,46 @@ export default function ProcessingResultsPage() {
     };
     
     loadData();
-  }, []);
+  }, [filename]); // Added filename as dependency
+
+  // Add this useEffect to update stats when processingOptions changes
+  useEffect(() => {
+    if (!isLoading && Object.keys(processingOptions).length > 0) {
+      console.log("Processing options updated:", processingOptions);
+
+      // Map sampling strategy to a consistent string
+      const samplingStrategy = 
+      processingOptions.sampling === 1 ? "undersampling" :
+      processingOptions.sampling === 2 ? "oversampling" :
+      processingOptions.sampling === 3 ? "smote" :
+      "none";
+
+      // Explicitly map dataset_type and model_type
+      const isTimeSeriesData = processingOptions.dataset_type === 1;
+      const isCrossSectionalData = processingOptions.dataset_type === 0;
+      const isRegressionData = processingOptions.model_type === 0;
+      const isClassificationData = processingOptions.model_type === 1;
+      
+      // Update stats based on current processing options
+      setStats(prevStats => {
+        const updatedStats = {
+          ...prevStats,
+          isTimeSeriesData,
+          isCrossSectionalData,
+          isRegressionData,
+          isClassificationData,
+          isSmote: samplingStrategy === "smote",
+          targetColumn: processingOptions.target_column || prevStats.targetColumn
+        };
+        
+        console.log("Updated stats:", updatedStats);
+        return updatedStats;
+      });
+    }
+  }, [processingOptions, isLoading]);
 
   /**
-   * 2) HELPER: Render a distribution chart for the selected column
-   *    We pass in e.g. beforeBins[selectedColumn] or afterBins[selectedColumn].
+   * Render distribution chart for the selected column
    */
   const renderBinnedChart = (columnBins, color) => {
     if (!columnBins) return <div className="text-beige/60">No data available</div>;
@@ -433,7 +514,7 @@ export default function ProcessingResultsPage() {
                     transition: "height 0.3s ease",
                   }}
                 />
-                {/* Tooltip showing exact count */}
+                {/* Tooltip */}
                 <div className="absolute bottom-full mb-2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   Count: {count}
                 </div>
@@ -443,9 +524,9 @@ export default function ProcessingResultsPage() {
         </div>
 
         {/* X labels */}
-        <div className="flex mt-2 text-xs text-beige/80">
+        <div className="flex mt-2 text-xs text-beige/80 min-h-12">
           {bins.map((label, idx) => (
-            <div key={idx} className="flex-1 text-center truncate px-0.5 hover:overflow-visible hover:z-10 hover:whitespace-normal">
+            <div key={idx} className="flex-1 text-center px-0.5 break-words">
               {label}
             </div>
           ))}
@@ -454,72 +535,7 @@ export default function ProcessingResultsPage() {
     );
   };
 
-  /**
-   * 3) COMPARISON CHART: Vertical bar charts with side-by-side bars
-   */
-  const renderComparison = () => {
-    const bBins = beforeBins[selectedColumn];
-    const aBins = afterBins[selectedColumn];
-    if (!bBins || !aBins) return <div className="text-beige/60">No distribution data available.</div>;
-
-    // Use the numeric column's natural bins
-    const columnType = columnTypes[selectedColumn] || "string";
-    const labels = columnType === "numeric" ? bBins.bins : bBins.bins.filter((_, i) => i < 5);
-    const beforeCounts = columnType === "numeric" ? bBins.counts : bBins.counts.filter((_, i) => i < 5);
-    const afterCounts = columnType === "numeric" ? aBins.counts : aBins.counts.filter((_, i) => i < 5);
-
-    // Calculate max for scaling
-    const maxCount = Math.max(...beforeCounts, ...afterCounts);
-
-    return (
-      <div className="flex flex-col">
-        <div className="flex justify-between space-x-4 h-60">
-          {labels.map((label, idx) => {
-            const bCount = beforeCounts[idx] || 0;
-            const aCount = afterCounts[idx] || 0;
-            const bHeight = maxCount ? (bCount / maxCount) * 100 : 0;
-            const aHeight = maxCount ? (aCount / maxCount) * 100 : 0;
-            
-            return (
-              <div key={idx} className="flex-1 flex flex-col justify-end items-center group">
-                <div className="w-full flex justify-center items-end space-x-1 h-full">
-                  {/* Before bar */}
-                  <div className="w-5/12 relative">
-                    <div 
-                      className="absolute bottom-0 w-full bg-[#007057] rounded-t"
-                      style={{ height: `${bHeight}%` }}
-                    ></div>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none">
-                      {bCount}
-                    </div>
-                  </div>
-                  
-                  {/* After bar */}
-                  <div className="w-5/12 relative">
-                    <div 
-                      className="absolute bottom-0 w-full bg-[#f3dab1] rounded-t"
-                      style={{ height: `${aHeight}%` }}
-                    ></div>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none">
-                      {aCount}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="text-center mt-2 text-xs text-beige/80 truncate w-full px-1">
-                  {label}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  /**
-   * 4) UI RENDER
-   */
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#007057] to-emerald-900">
@@ -531,6 +547,7 @@ export default function ProcessingResultsPage() {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#007057] to-emerald-900">
@@ -548,6 +565,7 @@ export default function ProcessingResultsPage() {
     );
   }
 
+  // No data state
   if (!columns || columns.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#007057] to-emerald-900">
@@ -565,8 +583,46 @@ export default function ProcessingResultsPage() {
     );
   }
 
+  // Debugging div for display at the bottom
+  const debuggingDiv = (
+    <div className="bg-red-800/20 border border-red-500/30 rounded-xl p-6 mb-8">
+      <h2 className="text-xl font-bold text-white mb-4">Debug Information</h2>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-black/30 p-4 rounded-lg">
+          <h3 className="text-white font-medium mb-2">Processing Options</h3>
+          <pre className="text-xs text-white/80 overflow-auto max-h-40">
+            {JSON.stringify(processingOptions, null, 2)}
+          </pre>
+        </div>
+        <div className="bg-black/30 p-4 rounded-lg">
+          <h3 className="text-white font-medium mb-2">Stats Object</h3>
+          <pre className="text-xs text-white/80 overflow-auto max-h-40">
+            {JSON.stringify(stats, null, 2)}
+          </pre>
+        </div>
+        <div className="bg-black/30 p-4 rounded-lg col-span-2">
+          <h3 className="text-white font-medium mb-2">Flags</h3>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div><span className="text-white/70">isTimeSeriesData:</span> <span className={stats.isTimeSeriesData ? "text-green-400" : "text-red-400"}>{String(stats.isTimeSeriesData)}</span></div>
+            <div><span className="text-white/70">isCrossSectionalData:</span> <span className={stats.isCrossSectionalData ? "text-green-400" : "text-red-400"}>{String(stats.isCrossSectionalData)}</span></div>
+            <div><span className="text-white/70">isRegressionData:</span> <span className={stats.isRegressionData ? "text-green-400" : "text-red-400"}>{String(stats.isRegressionData)}</span></div>
+            <div><span className="text-white/70">isClassificationData:</span> <span className={stats.isClassificationData ? "text-green-400" : "text-red-400"}>{String(stats.isClassificationData)}</span></div>
+            <div><span className="text-white/70">isSmote:</span> <span className={stats.isSmote ? "text-green-400" : "text-red-400"}>{String(stats.isSmote)}</span></div>
+            <div><span className="text-white/70">isOversampled:</span> <span className={stats.isOversampled ? "text-green-400" : "text-red-400"}>{String(stats.isOversampled)}</span></div>
+            <div><span className="text-white/70">isUndersampled:</span> <span className={stats.isUndersampled ? "text-green-400" : "text-red-400"}>{String(stats.isUndersampled)}</span></div>
+            <div><span className="text-white/70">isColumnsDropped:</span> <span className={stats.isColumnsDropped ? "text-green-400" : "text-red-400"}>{String(stats.isColumnsDropped)}</span></div>
+            <div><span className="text-white/70">dataset_type:</span> <span className="text-yellow-400">{processingOptions.dataset_type}</span></div>
+            <div><span className="text-white/70">model_type:</span> <span className="text-yellow-400">{processingOptions.model_type}</span></div>
+            <div><span className="text-white/70">sampling:</span> <span className="text-yellow-400">{processingOptions.sampling}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Main content
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#007057] to-emerald-900">
+    <div className={`min-h-screen bg-gradient-to-b from-[#007057] to-emerald-900 ${inriaSerif.className}`}>
       {/* File size warning */}
       {fileSizeWarning && (
         <div className="bg-yellow-500/20 border border-yellow-400/30 py-2 px-4 text-center">
@@ -614,11 +670,16 @@ export default function ProcessingResultsPage() {
               <p className="text-beige text-3xl font-bold">{stats.originalRows?.toLocaleString() || 0}</p>
             </div>
             <div className="bg-black/20 rounded-xl p-6">
-              <h3 className="text-emerald-300 font-medium mb-1">Cleaned Rows</h3>
+              <h3 className="text-emerald-300 font-medium mb-1">Processed Rows</h3>
               <p className="text-beige text-3xl font-bold">{stats.cleanedRows?.toLocaleString() || 0}</p>
               {stats.originalRows > 0 && (
-                <p className="text-beige/60 text-sm">
-                  ({Math.round((stats.cleanedRows / stats.originalRows) * 100)}% of original)
+                <p className={`text-sm ${stats.isOversampled ? 'text-yellow-300' : 'text-beige/60'}`}>
+                  {stats.isOversampled
+                    ? `(${stats.dataChangePercent}% increase)`
+                    : stats.isUndersampled
+                      ? `(${Math.abs(stats.dataChangePercent)}% reduction)`
+                      : `(No change in row count)`
+                  }
                 </p>
               )}
             </div>
@@ -632,13 +693,87 @@ export default function ProcessingResultsPage() {
             </div>
           </div>
 
-          {/* Data Preview (AFTER data) */}
+          {/* Data Type Information Card */}
+          <div className="bg-black/20 rounded-xl mb-8 p-6">
+            <h3 className="text-lg font-medium text-emerald-300 mb-3">
+              Processing Configuration Used
+            </h3>
+            
+            <div className="flex flex-col gap-4 w-full">
+              {/* Model Type */}
+              <div className="bg-black/30 p-3 rounded-lg">
+                <h4 className="text-emerald-200 font-medium mb-2 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                  {/* 1 for Regression, 0 for Classification */}
+                  Model Type: {processingOptions.model_type === 0 ? "Regression" : 
+                            processingOptions.model_type === 1 ? "Classification" : "None"}
+                </h4>
+                {/* CHANGE THIS PART - The problem is here */}
+                {processingOptions.target_column && (
+                  <p className="text-beige/80 text-sm">
+                    Target Column: <span className="bg-emerald-900/50 text-emerald-200 px-2 py-0.5 rounded text-xs">{processingOptions.target_column}</span>
+                  </p>
+                )}
+              </div>
+              
+              {/* Dataset Type */}
+              <div className="bg-black/30 p-3 rounded-lg">
+                <h4 className="text-emerald-200 font-medium mb-2 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                  </svg>
+                  {/* 1 for time series, 0 for cross */}
+                  Dataset Type: {processingOptions.dataset_type === 1 ? "Time Series" : 
+                                processingOptions.dataset_type === 0 ? "Cross-Sectional" : 
+                                "Not Specified"}
+                </h4>
+                {stats.isTimeSeriesData && stats.timeColumns && stats.timeColumns.length > 0 && (
+                  <div>
+                    <p className="text-beige/80 text-sm mb-2">Time-related columns:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {stats.timeColumns.map(col => (
+                        <span key={col} className="bg-emerald-900/50 text-emerald-200 px-2 py-0.5 rounded text-xs">
+                          {col}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Sampling Strategy */}
+              <div className="bg-black/30 p-3 rounded-lg">
+                <h4 className="text-emerald-200 font-medium mb-2 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                  </svg>
+                  Sampling Strategy
+                </h4>
+                <p className="text-beige/80 text-sm">
+                  {processingOptions.sampling === 'smote' ? "SMOTE (Synthetic Minority Oversampling)" : 
+                   processingOptions.sampling === "oversampling" ? "Oversampling" : 
+                   processingOptions.sampling === "undersampling" ? "Undersampling" : 
+                   "No Sampling"}
+                  
+                  {(stats.isOversampled || stats.isUndersampled) && (
+                    <span className="text-yellow-300 ml-2">
+                      ({stats.isOversampled ? "+" : ""}{stats.dataChangePercent}% rows)
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Preview */}
           <div className="bg-black/20 rounded-xl mb-8 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-beige">Data Preview (After Cleaning)</h2>
+              <h2 className="text-xl font-bold text-beige">Data Preview</h2>
               {columns.length > MAX_PREVIEW_COLUMNS && (
                 <div className="text-beige/60 text-sm">
-                  Showing {MAX_PREVIEW_COLUMNS} of {columns.length} columns
+                  Showing {displayColumns.length} of {columns.length} columns
                 </div>
               )}
             </div>
@@ -695,7 +830,7 @@ export default function ProcessingResultsPage() {
             </div>
 
             {/* Before / After charts */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-black/30 rounded-lg p-4">
                 <h3 className="text-center text-beige mb-4">Before Cleaning</h3>
                 {renderBinnedChart(beforeBins[selectedColumn], "#007057")}
@@ -705,22 +840,6 @@ export default function ProcessingResultsPage() {
                 <h3 className="text-center text-beige mb-4">After Cleaning</h3>
                 {renderBinnedChart(afterBins[selectedColumn], "#f3dab1")}
               </div>
-            </div>
-
-            {/* Vertical Bar Comparison */}
-            <div className="bg-black/30 rounded-lg p-4">
-              <h3 className="text-center text-beige mb-4">Before vs After Comparison</h3>
-              <div className="flex justify-center mb-4">
-                <div className="flex items-center mr-6">
-                  <div className="w-3 h-3 rounded-full bg-[#007057] mr-2" />
-                  <span className="text-beige text-sm">Before</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-[#f3dab1] mr-2" />
-                  <span className="text-beige text-sm">After</span>
-                </div>
-              </div>
-              {renderComparison()}
             </div>
           </div>
 
@@ -739,30 +858,26 @@ export default function ProcessingResultsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {columns.map((col, idx) => {
-                      const colType = columnTypes[col] || "unknown";
-                      const nullCount = columnNulls[col] ?? 0;
-                      return (
-                        <tr
-                          key={col}
-                          className={`border-b border-emerald-500/10 ${
-                            idx % 2 === 0 ? "bg-emerald-900/10" : ""
-                          }`}
-                        >
-                          <td className="py-2 px-3 text-beige">{col}</td>
-                          <td className="py-2 px-3 text-beige/80">{colType}</td>
-                          <td className="py-2 px-3 text-beige/80">{nullCount}</td>
-                        </tr>
-                      );
-                    })}
+                    {columns.map((col, idx) => (
+                      <tr
+                        key={col}
+                        className={`border-b border-emerald-500/10 ${
+                          idx % 2 === 0 ? "bg-emerald-900/10" : ""
+                        }`}
+                      >
+                        <td className="py-2 px-3 text-beige">{col}</td>
+                        <td className="py-2 px-3 text-beige/80">{columnTypes[col] || "unknown"}</td>
+                        <td className="py-2 px-3 text-beige/80">{columnNulls[col] ?? 0}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {/* Enhanced Data Summary */}
+            {/* Data Insights */}
             <div className="bg-black/20 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-beige mb-4">Enhanced Data Insights</h2>
+              <h2 className="text-xl font-bold text-beige mb-4">Data Insights</h2>
               <div className="space-y-4">
                 <div>
                   <h3 className="text-lg font-medium text-emerald-300 mb-2">Dataset Overview</h3>
@@ -770,6 +885,11 @@ export default function ProcessingResultsPage() {
                     <li>
                       <span className="text-emerald-200">Total Features:</span>{" "}
                       {columns.length}
+                      {stats.isColumnsDropped && (
+                        <span className="text-yellow-300 ml-2">
+                          ({stats.droppedColumns.length} columns removed)
+                        </span>
+                      )}
                     </li>
                     <li>
                       <span className="text-emerald-200">Numeric Columns:</span>{" "}
@@ -783,13 +903,26 @@ export default function ProcessingResultsPage() {
                       <span className="text-emerald-200">Columns with Missing Values:</span>{" "}
                       {Object.entries(columnNulls).filter(([, c]) => c > 0).length}
                     </li>
-                    <li>
-                      <span className="text-emerald-200">Data Reduction:</span>{" "}
-                      {stats.dataReduction}% fewer rows after cleaning
-                    </li>
                   </ul>
+
+                  {/* Data transformations summary */}
+                  <div className="mt-4 bg-black/30 p-3 rounded-lg text-sm">
+                    <p className="text-beige font-medium mb-2">Transformations Applied:</p>
+                    <ul className="list-inside space-y-1 text-beige/70">
+                      {stats.nullsFilled > 0 && <li>• Missing values filled: {stats.nullsFilled}</li>}
+                      {stats.duplicatesRemoved > 0 && <li>• Duplicates removed: {stats.duplicatesRemoved}</li>}
+                      {stats.isColumnsDropped && <li>• Columns dropped: {stats.droppedColumns.length}</li>}
+                      {stats.isSmote && <li>• SMOTE oversampling applied</li>}
+                      {stats.isOversampled && !stats.isSmote && <li>• General oversampling applied</li>}
+                      {stats.isUndersampled && <li>• Undersampling applied</li>}
+                      {!stats.isOversampled && !stats.isUndersampled && !stats.isColumnsDropped && stats.nullsFilled === 0 && stats.duplicatesRemoved === 0 && (
+                        <li>• Minor cleaning only</li>
+                      )}
+                    </ul>
+                  </div>
                 </div>
                 
+                {/* Column-specific stats */}
                 {selectedColumn && advancedStats[selectedColumn] && (
                   <div>
                     <h3 className="text-lg font-medium text-emerald-300 mb-2">
@@ -810,7 +943,7 @@ export default function ProcessingResultsPage() {
                           <span className="text-emerald-200">Standard Deviation:</span> {advancedStats[selectedColumn].stdDev.toFixed(2)}
                         </li>
                         <li>
-                          <span className="text-emerald-200">Potential Outliers:</span> {advancedStats[selectedColumn].outlierCount} ({advancedStats[selectedColumn].outlierPercentage.toFixed(1)}%)
+                          <span className="text-emerald-200">Outliers:</span> {advancedStats[selectedColumn].outlierCount} ({advancedStats[selectedColumn].outlierPercentage.toFixed(1)}%)
                         </li>
                       </ul>
                     ) : (
@@ -822,7 +955,7 @@ export default function ProcessingResultsPage() {
                           <span className="text-emerald-200">Most Common:</span> {advancedStats[selectedColumn].mostCommonValue}
                         </li>
                         <li>
-                          <span className="text-emerald-200">Frequency:</span> {advancedStats[selectedColumn].mostCommonCount} occurrences ({advancedStats[selectedColumn].mostCommonPercentage.toFixed(1)}%)
+                          <span className="text-emerald-200">Frequency:</span> {advancedStats[selectedColumn].mostCommonCount} ({advancedStats[selectedColumn].mostCommonPercentage.toFixed(1)}%)
                         </li>
                       </ul>
                     )}
@@ -832,7 +965,101 @@ export default function ProcessingResultsPage() {
             </div>
           </div>
 
-          {/* Export Section */}
+          {/* Suggested Analysis Techniques */}
+          <div className="bg-black/20 rounded-xl mb-8 p-6">
+            <h2 className="text-xl font-bold text-beige mb-4">Next Steps</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Visualizations */}
+              <div className="bg-black/30 p-4 rounded-lg">
+                <h3 className="text-lg font-medium text-emerald-300 mb-3">Recommended Visualizations</h3>
+                <ul className="list-disc list-inside space-y-1 text-beige/80">
+                  {stats.isTimeSeriesData && (
+                    <>
+                      <li>Line charts with time on x-axis</li>
+                      <li>Heatmaps for seasonal patterns</li>
+                    </>
+                  )}
+                  {stats.isCrossSectionalData && (
+                    <>
+                      <li>Bar charts for group comparisons</li>
+                      <li>Box plots for distributions</li>
+                    </>
+                  )}
+                  {stats.isRegressionData && (
+                    <>
+                      <li>Scatter plots with regression lines</li>
+                      <li>Feature importance charts</li>
+                    </>
+                  )}
+                  {stats.isClassificationData && (
+                    <>
+                      <li>Confusion matrix</li>
+                      <li>ROC/AUC curves</li>
+                    </>
+                  )}
+                  <li>Histograms for distributions</li>
+                  <li>Correlation heatmaps</li>
+                </ul>
+              </div>
+              
+              {/* Analysis Methods */}
+              <div className="bg-black/30 p-4 rounded-lg">
+                <h3 className="text-lg font-medium text-emerald-300 mb-3">Modeling Options</h3>
+                <ul className="list-disc list-inside space-y-1 text-beige/80">
+                  {stats.isRegressionData && (
+                    <>
+                      <li>Linear regression</li>
+                      <li>Decision trees (Random Forest)</li>
+                      <li>Gradient boosting</li>
+                      <li>Neural networks</li>
+                    </>
+                  )}
+                  {stats.isClassificationData && (
+                    <>
+                      <li>Logistic regression</li>
+                      <li>Support Vector Machines</li>
+                      <li>Random Forest classifier</li>
+                      <li>XGBoost classifier</li>
+                    </>
+                  )}
+                  {stats.isTimeSeriesData && (
+                    <>
+                      <li>ARIMA/SARIMA models</li>
+                      <li>Prophet forecasting</li>
+                    </>
+                  )}
+                  {stats.isCrossSectionalData && (
+                    <>
+                      <li>Clustering (e.g., K-Means, DBSCAN)</li>
+                      <li>Principal Component Analysis (PCA)</li>
+                      <li>Factor analysis</li>
+                      <li>Discriminant Analysis (LDA/QDA)</li>
+                    </>
+                  )}
+                </ul>
+              </div>
+            </div>
+            
+            {/* Dataset specifics */}
+            <div className="mt-4 bg-emerald-900/30 border border-emerald-700/30 rounded-lg p-4">
+              <h4 className="text-emerald-200 font-medium mb-2">
+                Your Processed Dataset
+              </h4>
+              <p className="text-beige/80">
+                You now have a clean, processed dataset with {stats.cleanedRows} rows and {columns.length} columns. 
+                {stats.nullsFilled > 0 && ` ${stats.nullsFilled} missing values were filled.`}
+                {stats.duplicatesRemoved > 0 && ` ${stats.duplicatesRemoved} duplicate rows were removed.`}
+                {stats.isColumnsDropped && ` ${stats.droppedColumns.length} columns were dropped.`}
+                {' '}This dataset is ready for{' '}
+                {stats.isRegressionData ? 'regression analysis' : 
+                 stats.isClassificationData ? 'classification models' : 
+                 'further analysis and modeling'}.
+              </p>
+            </div>
+          </div>
+
+          {/* Download Section */}
           <div className="bg-emerald-700/20 border border-emerald-500/30 rounded-xl p-6">
             <div className="flex flex-col md:flex-row items-center justify-between">
               <p className="text-beige mb-4 md:mb-0">Ready to use your cleaned data?</p>
@@ -857,6 +1084,9 @@ export default function ProcessingResultsPage() {
               </div>
             </div>
           </div>
+          
+          {/* Debugging information */}
+          {/* {debuggingDiv} */}
         </div>
       </div>
     </div>

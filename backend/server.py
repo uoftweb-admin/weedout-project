@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, after_this_request
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import pandas as pd
 import os
@@ -38,6 +38,7 @@ def process_file():
     
     # Save a copy to public folder with standard name
     public_original_path = os.path.join(PUBLIC_FILES_FOLDER, "file.csv")
+    print("\n\n\n\n\n\n DEBUGGGGGGG" + public_original_path + "\n\n\n\n\n\n DEBUGGGGGGG")
     shutil.copy2(file_path, public_original_path)
     
     # Check file size and potentially downsample for large files
@@ -47,7 +48,6 @@ def process_file():
     # If file is over 10MB, consider downsampling for preview
     if file_size_mb > 10:
         try:
-            # Read with pandas and sample 
             df = pd.read_csv(file_path)
             sample_size = min(10000, len(df))
             df_sample = df.sample(sample_size)
@@ -56,14 +56,20 @@ def process_file():
         except Exception as e:
             print(f"Warning: Could not downsample large file: {e}")
 
-    # Retrieve preprocessing parameters from the request
+    # SIMPLIFIED USER OPTIONS
+    # 1. Model type: regression (0) or classification (1)
+    model_type_int = int(request.form.get("model_type", 1))
+    
+    # 2. Sampling type: none, oversample, undersample, or smote
+    sampling_strategy = request.form.get("sampling_strategy", "none")
+    
+    # 3. Dataset type: cross-sectional (0) or time-series (1)
+    dataset_type_int = int(request.form.get("dataset_type", 0))
+    
+    # 4. Column selections
     target_column = request.form.get("target_column", "")
     drop_columns = json.loads(request.form.get("drop_columns", "[]"))
     untouched_columns = json.loads(request.form.get("untouched_columns", "[]"))
-    dataset_type = int(request.form.get("dataset_type", 0))
-    sampling = int(request.form.get("sampling", 0))
-    model_type = int(request.form.get("model_type", 1))
-    sampling_strategy = request.form.get("sampling_strategy", "smote")
 
     try:
         # Call preprocess_pipeline
@@ -73,9 +79,9 @@ def process_file():
                 target_column=target_column,
                 dropped_columns=drop_columns,
                 untouched_columns=untouched_columns,
-                type_dataset=dataset_type,
-                sampling=sampling,
-                classfication=model_type
+                type_dataset=dataset_type_int,
+                sampling=sampling_strategy,
+                classfication=model_type_int
             )
         else:
             processed_df = preprocess.preprocess_pipeline(
@@ -83,9 +89,9 @@ def process_file():
                 target_column=target_column,
                 dropped_columns=drop_columns,
                 untouched_columns=untouched_columns,
-                type_dataset=dataset_type,
-                sampling=sampling,
-                classfication=model_type,
+                type_dataset=dataset_type_int,
+                sampling=sampling_strategy,
+                classfication=model_type_int,
                 strategy_sample=sampling_strategy,
             )
         
@@ -114,7 +120,15 @@ def process_file():
         return jsonify({
             "message": "File processed successfully", 
             "filename": processed_filename,
-            "downsample_warning": downsample_warning  # return warning
+            "downsample_warning": downsample_warning,
+            "options_used": {
+                "model_type": model_type_int,
+                "sampling": sampling_strategy,
+                "dataset_type": dataset_type_int,
+                "target_column": target_column,
+                "columns_dropped": len(drop_columns),
+                "columns_untouched": len(untouched_columns)
+            }
         }), 200
 
     except Exception as e:

@@ -105,6 +105,8 @@ export default function PreprocessingConfig() {
   
       const filename = response.data.filename;
       console.log("Backend responded with filename:", filename);
+
+      localStorage.setItem('processingOptions', JSON.stringify(response.data.options_used));
   
       router.push(`/preprocessing/results?file=${filename}`);
     } catch (err) {
