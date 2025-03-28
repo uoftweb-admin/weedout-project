@@ -620,6 +620,42 @@ export default function ProcessingResultsPage() {
     </div>
   );
 
+  const handleDownload = () => {
+    if (filename) {
+      setIsLoading(true);
+      console.log(`Attempting to download file: ${filename}`);
+      
+      // Simple direct download approach
+      const downloadUrl = `http://localhost:5001/download/${filename}`;
+      
+      // Create a link element and trigger the download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename; // This sets the download attribute
+      
+      // Add to DOM, click, and remove (cleaner approach than iframe)
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Set a reasonable timeout to consider the download started
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
+      
+      // Add error handling
+      fetch(downloadUrl, { method: 'HEAD' })
+        .then(response => {
+          if (!response.ok) {
+            setError("Could not find the file for download. Please try processing again.");
+          }
+        })
+        .catch(() => {
+          setError("Download failed. Please check your connection and try again.");
+        });
+    }
+  };
+
   // Main content
   return (
     <div className={`min-h-screen bg-gradient-to-b from-[#007057] to-emerald-900 ${inriaSerif.className}`}>
@@ -646,13 +682,14 @@ export default function ProcessingResultsPage() {
               <h1 className="text-4xl font-bold text-beige">Processing Results</h1>
             </div>
             {filename ? (
-              <a
-                href={`http://localhost:5001/download/processed_${filename}`}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300"
-                download
-              >
+              <button
+                onClick={handleDownload}
+                className="bg-infoBoxes text-blueText text-lg font-semibold px-8 py-3 rounded-full shadow-lg 
+                  hover:bg-gradient-to-r hover:from-infoBoxes hover:to-beige
+                  hover:shadow-infoBoxes/30 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out" 
+                  >
                 Download Processed File
-              </a>
+              </button>
             ) : (
               <p className="text-beige/60">No processed file name provided</p>
             )}
@@ -1060,7 +1097,7 @@ export default function ProcessingResultsPage() {
           </div>
 
           {/* Download Section */}
-          <div className="bg-emerald-700/20 border border-emerald-500/30 rounded-xl p-6">
+          {/* <div className="bg-emerald-700/20 border border-emerald-500/30 rounded-xl p-6">
             <div className="flex flex-col md:flex-row items-center justify-between">
               <p className="text-beige mb-4 md:mb-0">Ready to use your cleaned data?</p>
               <div className="flex space-x-4">
@@ -1083,7 +1120,7 @@ export default function ProcessingResultsPage() {
                 </a>
               </div>
             </div>
-          </div>
+          </div> */}
           
           {/* Debugging information */}
           {/* {debuggingDiv} */}
