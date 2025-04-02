@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Inria_Serif } from "@next/font/google";
+import { Inria_Serif } from "next/font/google";
 
 const inriaSerif = Inria_Serif({
   subsets: ["latin"],

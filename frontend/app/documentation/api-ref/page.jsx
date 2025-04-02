@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect, useRef } from "react";
-import { Inria_Serif } from '@next/font/google';
+import { Inria_Serif } from 'next/font/google';
 import Sidebar from "../Sidebar.js";
 import ContentArea from "../ContentArea.js";
 import useMediaQuery from "../useMediaQuery.js";

@@ -1,5 +1,5 @@
 "use client"
-import { Inria_Serif } from "@next/font/google"
+import { Inria_Serif } from "next/font/google"
 import { useRouter } from "next/navigation"
 import { Code, Database, Clock, Users, BarChart3, Zap, Layers, GitMerge, Shield } from "lucide-react"
 

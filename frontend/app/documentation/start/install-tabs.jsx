@@ -1,5 +1,5 @@
 "use client"
-import { Inria_Serif } from '@next/font/google';
+import { Inria_Serif } from 'next/font/google';
 import CodeBlock from '../CodeBlock';
 
 const inriaSerif = Inria_Serif({

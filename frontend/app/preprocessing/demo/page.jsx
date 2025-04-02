@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Inria_Serif } from "@next/font/google"
+import { Inria_Serif } from "next/font/google"
 import { CloudUpload, Trash2, Database, Settings, FileType, Columns } from "lucide-react"
 import { GoArrowLeft } from "react-icons/go";
 import axios from "axios";

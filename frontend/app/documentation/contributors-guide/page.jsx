@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { BLUE, GREEN, WHITE } from "../colors.js";
-import { Inria_Serif } from '@next/font/google';
+import { Inria_Serif } from 'next/font/google';
 import {
   BookOpen,
   Code,

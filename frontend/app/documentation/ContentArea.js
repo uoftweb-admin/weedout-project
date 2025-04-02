@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useUI } from "../UIProvider";
 import hljs from 'highlight.js/lib/core';
 import python from 'highlight.js/lib/languages/python';
-import { Inria_Serif } from '@next/font/google';
+import { Inria_Serif } from 'next/font/google';
 
 const inriaSerif = Inria_Serif({
   subsets: ['latin'],

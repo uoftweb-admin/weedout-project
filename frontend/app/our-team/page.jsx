@@ -1,7 +1,7 @@
 // Import Statements
 import React from 'react';
 import Image from 'next/image';
-import { Inria_Serif } from '@next/font/google';
+import { Inria_Serif } from 'next/font/google';
 
 // Google Font Configuration
 const inriaSerif = Inria_Serif({

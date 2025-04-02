@@ -4,7 +4,7 @@ import React from "react";
 import Cards from "./Cards";
 import Link from "next/link"
 import { GREEN, BLUE, WHITE } from "./colors";
-import { Inria_Serif } from '@next/font/google';
+import { Inria_Serif } from 'next/font/google';
 
 const inriaSerif = Inria_Serif({
   subsets: ['latin'],

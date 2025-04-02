@@ -4,7 +4,7 @@ import { useEffect, useRef, useLayoutEffect } from 'react';
 import hljs from 'highlight.js/lib/core';
 import python from 'highlight.js/lib/languages/python';
 import 'highlight.js/styles/atom-one-dark.css';
-import { Inria_Serif } from '@next/font/google';
+import { Inria_Serif } from 'next/font/google';
 
 const inriaSerif = Inria_Serif({
   subsets: ['latin'],
