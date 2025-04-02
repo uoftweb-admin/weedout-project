@@ -624,9 +624,11 @@ export default function ProcessingResultsPage() {
     if (filename) {
       setIsLoading(true);
       console.log(`Attempting to download file: ${filename}`);
+
+      const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
       
       // Simple direct download approach
-      const downloadUrl = `http://localhost:5001/download/${filename}`;
+      const downloadUrl = `${BASE_URL}/download/${filename}`;
       
       // Create a link element and trigger the download
       const link = document.createElement('a');

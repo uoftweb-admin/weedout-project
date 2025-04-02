@@ -110,11 +110,13 @@ export default function PreprocessingConfig() {
     for (let [key, value] of formData.entries()) {
       console.log(`${key}: ${value}`);
     }
+
+    const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   
     try {
       console.log("Sending request to backend...");
       
-      const response = await axios.post("http://localhost:5001/process", formData, {
+      const response = await axios.post(`${BASE_URL}/process`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
   

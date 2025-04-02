@@ -42,3 +42,6 @@ next-env.d.ts
 
 temp
 processed
+
+.env
+.env.local
