@@ -600,10 +600,10 @@ export default function ContentArea({ contentKey }) {
       }
     }, [contentKey]); // contentKey
 
-    const handleBack = () => {
-        setActiveNavItem('');
-        router.back();
-    };
+    // const handleBack = () => {
+    //     setActiveNavItem('');
+    //     router.back();
+    // };
 
     // Dynamically generate content and add unique keys
     const renderContent = () => {

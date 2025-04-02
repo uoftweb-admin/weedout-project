@@ -1,6 +1,6 @@
 // app/documentation/user-guide/CodeBlock.jsx
 "use client";
-import { useEffect, useRef, useLayoutEffect } from 'react';
+import { useRef, useLayoutEffect } from 'react';
 import hljs from 'highlight.js/lib/core';
 import python from 'highlight.js/lib/languages/python';
 import 'highlight.js/styles/atom-one-dark.css';

@@ -1,5 +1,5 @@
 import React from "react";
-import { GREEN, BLUE, WHITE } from "./colors";
+import { BLUE, WHITE } from "./colors";
 import Link from "next/link";
 import { Inria_Serif } from 'next/font/google';
 
@@ -8,7 +8,7 @@ const inriaSerif = Inria_Serif({
   weight: ['400', '700'],
 });
 
-export default function Cards({ link, title, description, children }) {
+export default function Cards({ link, title, description }) {
     return (
         <div
           style={{
