@@ -5,6 +5,7 @@ cycler==0.12.1
 Flask==3.1.0
 flask-cors==5.0.1
 fonttools==4.56.0
+gunicorn==23.0.0
 imbalanced-learn==0.13.0
 itsdangerous==2.2.0
 Jinja2==3.1.6
