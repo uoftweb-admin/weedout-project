@@ -45,7 +45,7 @@ export default function Home() {
                   className="px-8 py-3 bg-emerald-700/30 text-beige border border-emerald-500/30
                     rounded-lg font-medium hover:bg-emerald-700/40 active:bg-emerald-700/50
                     transform hover:-translate-y-0.5 transition-all duration-200
-                    focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    focus:outline-none focus:ring-2 focus:ring-emerald-500/50 mb-10"
                 >
                   View on GitHub
                 </a>
