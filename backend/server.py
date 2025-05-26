@@ -274,7 +274,7 @@ def process_file():
 
         return jsonify({
             "message": "File processed successfully", 
-            "filename": processed_filename,
+            "filename": public_processed_name,
             "downsample_warning": downsample_warning,
             "options_used": options_used
         }), 200
