@@ -337,7 +337,11 @@ export default function ProcessingResultsPage() {
         }
 
         // Load CSV data
-        const beforeData = await fetchCSVData("file.csv");
+        // const beforeData = await fetchCSVData("file.csv");
+        const options = localStorage.getItem("processingOptions");
+        const originalFilename = options ? JSON.parse(options).original_filename : "file.csv";
+        const beforeData = await fetchCSVData(originalFilename);
+
         const afterData = await fetchCSVData(filename);
     
         if (!afterData || afterData.length === 0) {
