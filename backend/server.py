@@ -16,9 +16,13 @@ CORS(app)
 
 # Fix directory structure - move OUTSIDE the backend folder
 BASE_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))  # Go up one level
-UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
-PROCESSED_FOLDER = os.getenv("PROCESSED_FOLDER")
-PUBLIC_FILES_FOLDER = os.getenv("PUBLIC_FILES_FOLDER")
+# UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
+# PROCESSED_FOLDER = os.getenv("PROCESSED_FOLDER")
+# PUBLIC_FILES_FOLDER = os.getenv("PUBLIC_FILES_FOLDER")
+
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "temp")
+PROCESSED_FOLDER = os.path.join(BASE_DIR, "processed")
+PUBLIC_FILES_FOLDER = os.path.join(BASE_DIR, "frontend/public/files")
 
 # Print directories at startup for debugging
 print(f"BASE_DIR: {BASE_DIR}")
