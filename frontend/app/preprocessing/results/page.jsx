@@ -46,7 +46,7 @@ export default function ProcessingResultsPage() {
     const fetchCSVData = async (fileName) => {
       try {
         // const response = await fetch(`/files/${fileName}`);
-        const response = await fetch(`/download/${fileName}`);
+        const response = await fetch(`/download/${fileName}?t=${Date.now()}`);
         // Check file size
         const contentLength = response.headers.get('content-length');
         const fileSizeMB = contentLength ? parseInt(contentLength) / (1024 * 1024) : 0;
