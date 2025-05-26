@@ -120,17 +120,26 @@ export default function PreprocessingConfig() {
         headers: { "Content-Type": "multipart/form-data" },
       });
   
-      const filename = response.data.filename;
+      // const filename = response.data.filename;
+      const processedFilename = response.data.filename;
+      const originalFilename = response.data.original_filename;
       console.log("Backend responded with filename:", filename);
       console.log("Options used:", response.data.options_used);
   
       // Make sure we store the correct sampling strategy string in localStorage
-      localStorage.setItem('processingOptions', JSON.stringify({
-        ...response.data.options_used,
-        sampling: response.data.options_used.sampling || samplingStrategy
-      }));
+      // localStorage.setItem('processingOptions', JSON.stringify({
+      //   ...response.data.options_used,
+      //   sampling: response.data.options_used.sampling || samplingStrategy
+      // }));
   
-      router.push(`/preprocessing/results?file=${filename}`);
+      // router.push(`/preprocessing/results?file=${filename}`);
+      localStorage.setItem("processingOptions", JSON.stringify({
+        ...response.data.options_used,
+        sampling: response.data.options_used.sampling || samplingStrategy,
+        original_filename: originalFilename // 👈 add this
+      }));
+      
+      router.push(`/preprocessing/results?file=${processedFilename}`);
     } catch (err) {
       console.error("Processing failed:", err);
       alert(`Something went wrong while processing the file: ${err.response?.data?.error || err.message}`);
