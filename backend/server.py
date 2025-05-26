@@ -195,7 +195,7 @@ def process_file():
             dropped_columns=drop_columns,
             untouched_columns=untouched_columns,
             type_dataset=dataset_type_int,
-            sampling=sampling_int,
+            sampling=1,
             classfication=model_type_int,
             strategy_sample=sampling_strategy,
         )
