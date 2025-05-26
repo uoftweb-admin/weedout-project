@@ -45,8 +45,8 @@ export default function ProcessingResultsPage() {
   useEffect(() => {
     const fetchCSVData = async (fileName) => {
       try {
-        const response = await fetch(`/files/${fileName}`);
-        
+        // const response = await fetch(`/files/${fileName}`);
+        const response = await fetch(`/download/${fileName}`);
         // Check file size
         const contentLength = response.headers.get('content-length');
         const fileSizeMB = contentLength ? parseInt(contentLength) / (1024 * 1024) : 0;
