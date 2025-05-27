@@ -1,5 +1,7 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
+import { Suspense } from 'react';
 import { useRouter } from "next/navigation";
 import { GoArrowLeft } from "react-icons/go";
 import Papa from "papaparse";
@@ -16,7 +18,7 @@ const NUM_BINS = 10;
 const MAX_PREVIEW_COLUMNS = 8;
 const MAX_CLIENT_PROCESS_SIZE_MB = 1;
 
-export default function ProcessingResultsPage() {
+function ProcessingResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const filename = searchParams.get("file");
@@ -45,8 +47,8 @@ export default function ProcessingResultsPage() {
   useEffect(() => {
     const fetchCSVData = async (fileName) => {
       try {
-        // const response = await fetch(`/files/${fileName}`);
-        const response = await fetch(`/download/${fileName}?t=${Date.now()}`);
+        const response = await fetch(`/files/${fileName}`);
+        
         // Check file size
         const contentLength = response.headers.get('content-length');
         const fileSizeMB = contentLength ? parseInt(contentLength) / (1024 * 1024) : 0;
@@ -337,12 +339,8 @@ export default function ProcessingResultsPage() {
         }
 
         // Load CSV data
-        // const beforeData = await fetchCSVData("file.csv");
-        const options = localStorage.getItem("processingOptions");
-        const originalFilename = options ? JSON.parse(options).original_filename : "file.csv";
-        const beforeData = await fetchCSVData(originalFilename);
-
-        const afterData = await fetchCSVData(filename);
+        const beforeData = await fetchCSVData("file.csv");
+        const afterData = await fetchCSVData("file_processed.csv");
     
         if (!afterData || afterData.length === 0) {
           setError("No data found in the processed file.");
@@ -1133,5 +1131,13 @@ export default function ProcessingResultsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProcessingResultsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProcessingResultsContent />
+    </Suspense>
   );
 }
