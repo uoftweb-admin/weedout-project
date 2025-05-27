@@ -16,13 +16,9 @@ CORS(app)
 
 # Fix directory structure - move OUTSIDE the backend folder
 BASE_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))  # Go up one level
-# UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
-# PROCESSED_FOLDER = os.getenv("PROCESSED_FOLDER")
-# PUBLIC_FILES_FOLDER = os.getenv("PUBLIC_FILES_FOLDER")
-
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "temp")
-PROCESSED_FOLDER = os.path.join(BASE_DIR, "processed")
-PUBLIC_FILES_FOLDER = os.path.join(BASE_DIR, "frontend/public/files")
+UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
+PROCESSED_FOLDER = os.getenv("PROCESSED_FOLDER")
+PUBLIC_FILES_FOLDER = os.getenv("PUBLIC_FILES_FOLDER")
 
 # Print directories at startup for debugging
 print(f"BASE_DIR: {BASE_DIR}")
@@ -86,10 +82,7 @@ def process_file():
     # Use absolute paths for all file operations
     file_path = os.path.join(UPLOAD_FOLDER, original_filename)
     public_original_path = os.path.join(PUBLIC_FILES_FOLDER, "file.csv")
-    # public_processed_path = os.path.join(PUBLIC_FILES_FOLDER, "file_processed.csv")
-    public_processed_name = f"{int(time.time())}_file_processed.csv"
-    public_processed_path = os.path.join(PUBLIC_FILES_FOLDER, public_processed_name)
-
+    public_processed_path = os.path.join(PUBLIC_FILES_FOLDER, "file_processed.csv")
     
     # Save uploaded file
     try:
@@ -205,7 +198,7 @@ def process_file():
             dropped_columns=drop_columns,
             untouched_columns=untouched_columns,
             type_dataset=dataset_type_int,
-            sampling=1,
+            sampling=sampling_int,
             classfication=model_type_int,
             strategy_sample=sampling_strategy,
         )
@@ -274,8 +267,7 @@ def process_file():
 
         return jsonify({
             "message": "File processed successfully", 
-            "filename": public_processed_name,
-            "original_filename": "file.csv",
+            "filename": processed_filename,
             "downsample_warning": downsample_warning,
             "options_used": options_used
         }), 200
